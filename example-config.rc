@@ -1,0 +1,6 @@
+export DBNAME='dbname'
+export DBUSER='dbuser'
+export DBPASSWORD='dbpass'
+export DBHOST='localhost'
+export ICANN_USERNAME='username@example.com'
+export ICANN_PASSWORD='Abcdef#12345678'
