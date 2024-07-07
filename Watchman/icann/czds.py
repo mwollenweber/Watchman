@@ -6,8 +6,10 @@ import traceback
 import json
 import cgi
 import gzip
+from Watchman.models import Domain
 from datetime import datetime
 from django.conf import settings
+from datetime import datetime
 
 
 def ingest_zonefile(zone_file):
@@ -19,6 +21,7 @@ def ingest_zonefile(zone_file):
         except IndexError:
             traceback.print_exc()
 
+    domain_list.sort()
     return domain_list
 
 
@@ -48,6 +51,7 @@ class CZDS:
         }
 
     def authenticate(self):
+        auth_url = self.auth_base_url + '/api/authenticate'
         auth_headers =  {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
@@ -58,7 +62,6 @@ class CZDS:
             'password': self.password,
         }
 
-        auth_url = self.auth_base_url + '/api/authenticate'
         response = requests.post(auth_url, data=json.dumps(credential), headers=auth_headers)
         status_code = response.status_code
 
@@ -128,3 +131,19 @@ class CZDS:
         data = io.BytesIO(gzip.decompress(f.getbuffer()))
         domain_list = ingest_zonefile(data)
         return domain_list
+
+    def load_zonefile(self, zone):
+        if not self.is_authenticated:
+            self.authenticate()
+
+        link = f"https://czds-download-api.icann.org/czds/downloads/{zone}.zone"
+        for domain in myicann.download_one_zone(link):
+            try:
+                name, tld = domain.split('.')
+                obj, created = Domain.objects.update_or_create(
+                    domain=domain,
+                    tld=tld,
+                )
+            except ValueError as e:
+                print(f"ERROR: domain={domain}")
+                #traceback.print_exc()

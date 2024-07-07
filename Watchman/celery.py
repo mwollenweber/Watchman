@@ -2,9 +2,9 @@ import os
 from celery import Celery
 
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'EasyGymCheckin.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Watchman.settings')
 
-app = Celery('EasyGymCheckin')
+app = Celery('Watchman')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 app.conf.timezone = 'UTC'
 app.autodiscover_tasks()

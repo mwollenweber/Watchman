@@ -12,4 +12,3 @@ class Command(BaseCommand):
         for l in links:
             print(l)
             data = myicann.download_one_zone(l)
-            return

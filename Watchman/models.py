@@ -7,7 +7,7 @@ class Client(models.Model):
 
 
 class Domain(models.Model):
-    name = models.CharField(max_length=255, primary_key=True)
+    domain = models.CharField(max_length=255, primary_key=True)
     tld = models.CharField(max_length=255, blank=False, null=False, db_index=True)
     first_seen = models.DateTimeField(auto_now_add=True, blank=True)
     is_new = models.BooleanField(default=True, blank=True, db_index=True)

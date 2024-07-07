@@ -20,12 +20,9 @@ class Command(BaseCommand):
             try:
                 name, tld = domain.split('.')
                 obj, created = Domain.objects.update_or_create(
-                    name=name,
+                    domain=domain,
                     tld=tld,
                 )
             except ValueError as e:
                 print(f"ERROR: domain={domain}")
                 #traceback.print_exc()
-
-
-
