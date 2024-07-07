@@ -3,6 +3,7 @@ import sys
 import requests
 import traceback
 import json
+import cgi
 from datetime import datetime
 from django.conf import settings
 
@@ -31,7 +32,7 @@ def compare_sorted_files(file1, file2):
             break
 
 
-class czds:
+class CZDS:
     def __init__(self, username=None, password=None):
         print("init")
         self.username = username or settings.ICANN_USERNAME
@@ -64,7 +65,7 @@ class czds:
         # Return the access_token on status code 200. Otherwise, terminate the program.
         if status_code == 200:
             access_token = response.json()['accessToken']
-            print('{0}: Received access_token:'.format(datetime.datetime.now()))
+            print(f'Received access_token: {access_token}')
             print(access_token)
             self.headers['Authorization'] = 'Bearer {0}'.format(access_token)
             self.is_authenticated = True
@@ -86,7 +87,7 @@ class czds:
 
         if status_code == 200:
             zone_links = links_response.json()
-            print("{0}: The number of zone files to be downloaded is {1}".format(datetime.datetime.now(), len(zone_links)))
+            print(f'{len(zone_links)} zones downloaded')
             return zone_links
         elif status_code == 401:
             print("The access_token has been expired. Re-authenticate")
@@ -96,6 +97,41 @@ class czds:
         else:
             sys.stderr.write("Failed to get zone links from {0} with error code {1}\n".format(links_url, status_code))
             return None
+
+    def download_one_zone(self, url):
+        print("{0}: Downloading zone file from {1}".format(str(datetime.now()), url))
+        if not self.is_authenticated:
+            self.authenticate()
+
+        output_directory = '/tmp/'
+
+        download_zone_response = requests.get(url, headers=self.headers, stream=True)
+        status_code = download_zone_response.status_code
+        if status_code == 200:
+            # Try to get the filename from the header
+            _, option = cgi.parse_header(download_zone_response.headers['content-disposition'])
+            filename = option.get('filename')
+
+            # If could get a filename from the header, then makeup one like [tld].txt.gz
+            if not filename:
+                filename = url.rsplit('/', 1)[-1].rsplit('.')[-2] + '.txt.gz'
+
+            # This is where the zone file will be saved
+            path = '{0}/{1}'.format(output_directory, filename)
+
+            with open(path, 'wb') as f:
+                for chunk in download_zone_response.iter_content(1024):
+                    f.write(chunk)
+
+            print("{0}: Completed downloading zone to file {1}".format(str(datetime.now()), path))
+
+        elif status_code == 401:
+            print("The access_token has been expired")
+            self.is_authenticated = False
+        elif status_code == 404:
+            print("No zone file found for {0}".format(url))
+        else:
+            sys.stderr.write('Failed to download zone from {0} with code {1}\n'.format(url, status_code))
 
 
 if __name__ == "__main__":
@@ -112,5 +148,11 @@ if __name__ == "__main__":
     # file1 = open('./out.txt', 'r')
     # file2 = open('/Users/mjw/projects/icann/out.txt', 'r')
     # compare_sorted_files(file1, file2)
+
+    myicann = CZDS()
+    myicann.authenticate()
+    links = myicann.get_zone_links()
+    for l in links:
+        print(l)
 
     print(datetime.utcnow())
