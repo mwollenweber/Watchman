@@ -52,7 +52,7 @@ class CZDS:
 
     def authenticate(self):
         auth_url = self.auth_base_url + '/api/authenticate'
-        auth_headers =  {
+        auth_headers = {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         }
@@ -146,4 +146,4 @@ class CZDS:
                 )
             except ValueError as e:
                 print(f"ERROR: domain={domain}")
-                #traceback.print_exc()
+                # traceback.print_exc()

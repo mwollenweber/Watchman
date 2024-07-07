@@ -20,7 +20,7 @@ class Command(BaseCommand):
         outfile = open(filename, "w")
 
         for line in myicann.download_one_zone(link):
-            #print(line)
+            # print(line)
             outfile.write(line)
 
         print("Done")

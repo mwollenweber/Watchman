@@ -19,5 +19,5 @@ class ZoneList(models.Model):
     last_updated = models.DateTimeField(auto_now=True)
     next_update = models.DateTimeField(blank=True, null=True)
 
-    #f"https://czds-download-api.icann.org/czds/downloads/{zone}.zone"
+    # f"https://czds-download-api.icann.org/czds/downloads/{zone}.zone"
     url = models.CharField(max_length=255, blank=True, null=True)

@@ -9,7 +9,6 @@ class Command(BaseCommand):
         # Positional arguments
         parser.add_argument("zone", type=str)
 
-
     def handle(self, **options):
         myicann = czds.CZDS()
         myicann.authenticate()
@@ -25,4 +24,4 @@ class Command(BaseCommand):
                 )
             except ValueError as e:
                 print(f"ERROR: domain={domain}")
-                #traceback.print_exc()
+                # traceback.print_exc()
