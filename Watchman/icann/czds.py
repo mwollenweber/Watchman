@@ -1,9 +1,11 @@
 import logging
+import io
 import sys
 import requests
 import traceback
 import json
 import cgi
+import gzip
 from datetime import datetime
 from django.conf import settings
 
@@ -12,8 +14,8 @@ def ingest_zonefile(zone_file):
     domain_list = []
     for line in zone_file:
         try:
-            # domain_list.append(line.lower().strip().split()[0])
-            domain_list.append(line.lower().strip().split()[0][:-1])
+            domain = line.lower().strip().split()[0][:-1].decode('ascii')
+            domain_list.append(domain)
         except IndexError:
             traceback.print_exc()
 
@@ -34,7 +36,6 @@ def compare_sorted_files(file1, file2):
 
 class CZDS:
     def __init__(self, username=None, password=None):
-        print("init")
         self.username = username or settings.ICANN_USERNAME
         self.password = password or settings.ICANN_PASSWORD
         self.auth_base_url = 'https://account-api.icann.org'
@@ -47,7 +48,6 @@ class CZDS:
         }
 
     def authenticate(self):
-        print("authenticate")
         auth_headers =  {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
@@ -65,8 +65,6 @@ class CZDS:
         # Return the access_token on status code 200. Otherwise, terminate the program.
         if status_code == 200:
             access_token = response.json()['accessToken']
-            print(f'Received access_token: {access_token}')
-            print(access_token)
             self.headers['Authorization'] = 'Bearer {0}'.format(access_token)
             self.is_authenticated = True
             self.access_token = access_token
@@ -103,8 +101,6 @@ class CZDS:
         if not self.is_authenticated:
             self.authenticate()
 
-        output_directory = '/tmp/'
-
         download_zone_response = requests.get(url, headers=self.headers, stream=True)
         status_code = download_zone_response.status_code
         if status_code == 200:
@@ -116,14 +112,10 @@ class CZDS:
             if not filename:
                 filename = url.rsplit('/', 1)[-1].rsplit('.')[-2] + '.txt.gz'
 
-            # This is where the zone file will be saved
-            path = '{0}/{1}'.format(output_directory, filename)
-
-            with open(path, 'wb') as f:
-                for chunk in download_zone_response.iter_content(1024):
-                    f.write(chunk)
-
-            print("{0}: Completed downloading zone to file {1}".format(str(datetime.now()), path))
+            f = io.BytesIO()
+            for chunk in download_zone_response.iter_content(1024):
+                f.write(chunk)
+            print(f"Completed downloading {filename}")
 
         elif status_code == 401:
             print("The access_token has been expired")
@@ -133,26 +125,6 @@ class CZDS:
         else:
             sys.stderr.write('Failed to download zone from {0} with code {1}\n'.format(url, status_code))
 
-
-if __name__ == "__main__":
-    print(datetime.utcnow())
-    # filename = sys.argv[1]
-    # zone_file = open(filename, 'r')
-    # outfile = open('./out.txt', 'w')
-    # domain_list = ingest_zonefile(zone_file)
-    # domain_list.sort()
-    #
-    # for line in domain_list:
-    #     outfile.write(f"{line}\n")
-
-    # file1 = open('./out.txt', 'r')
-    # file2 = open('/Users/mjw/projects/icann/out.txt', 'r')
-    # compare_sorted_files(file1, file2)
-
-    myicann = CZDS()
-    myicann.authenticate()
-    links = myicann.get_zone_links()
-    for l in links:
-        print(l)
-
-    print(datetime.utcnow())
+        data = io.BytesIO(gzip.decompress(f.getbuffer()))
+        domain_list = ingest_zonefile(data)
+        return domain_list
