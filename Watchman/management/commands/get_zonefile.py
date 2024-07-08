@@ -11,6 +11,7 @@ class Command(BaseCommand):
 
     def handle(self, **options):
         date_string = f'{datetime.now():%Y%m%d}'
+        count = 0
         myicann = czds.CZDS()
         myicann.authenticate()
         zone = options["zone"]
@@ -20,7 +21,9 @@ class Command(BaseCommand):
         outfile = open(filename, "w")
 
         for line in myicann.download_one_zone(link):
-            # print(line)
-            outfile.write(line)
+            outfile.write(f"{line}\n")
+            count += 1
+            if count % 10000 == 0:
+                print(f"{count} zones downloaded")
 
         print("Done")

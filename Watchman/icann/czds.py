@@ -25,18 +25,6 @@ def ingest_zonefile(zone_file):
     return domain_list
 
 
-def compare_sorted_files(file1, file2):
-    count = 0
-    for line in file1:
-        l1 = line.lower().strip()
-        l2 = file2.readline().lower().strip()
-        if l1 == l2:
-            count += 1
-        else:
-            print(f"{count}: {l1} != {l2}")
-            break
-
-
 class CZDS:
     def __init__(self, username=None, password=None):
         self.username = username or settings.ICANN_USERNAME
