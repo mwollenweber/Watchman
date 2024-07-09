@@ -7,10 +7,10 @@ def diff_lists(oldlist, newlist):
     return list(set(newlist) - set(oldlist))
 
 
-def memory_diff_files(oldfilename, newfilename):
+def memory_diff_files(old_file, new_file):
     try:
-        old = open(oldfilename, 'r').read().split()
-        new = open(newfilename, 'r').read().split()
+        old = old_file.read().split()
+        new = new_file.read().split()
         return diff_lists(old, new)
     except IOError:
         traceback.print_exc()
@@ -18,7 +18,6 @@ def memory_diff_files(oldfilename, newfilename):
 
 def diff_files(old_file, new_file):
     new_list = []
-
     old = old_file.readline().strip()
     new = new_file.readline().strip()
 
@@ -35,5 +34,6 @@ def diff_files(old_file, new_file):
     new_list.append(new)
     for line in new_file:
         new_list.append(line.strip())
+
 
     return new_list

@@ -10,20 +10,18 @@ class Command(BaseCommand):
         parser.add_argument("zone", type=str)
 
     def handle(self, **options):
-        date_string = f'{datetime.now():%Y%m%d}'
         count = 0
         myicann = czds.CZDS()
         myicann.authenticate()
         zone = options["zone"]
         link = f"https://czds-download-api.icann.org/czds/downloads/{zone}.zone"
-        filename = f"{settings.TEMP_DIR}/{date_string}-{zone}.txt"
-        print(filename)
+        filename = f"{settings.TEMP_DIR}/{datetime.now():%Y%m%d}-{zone}.txt"
         outfile = open(filename, "w")
 
         for line in myicann.download_one_zone(link):
             outfile.write(f"{line}\n")
             count += 1
             if count % 10000 == 0:
-                print(f"{count} zones downloaded")
+                print(f"{count} domains written to {filename}")
 
         print("Done")

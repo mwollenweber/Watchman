@@ -10,18 +10,25 @@ from Watchman.models import Domain
 from datetime import datetime
 from django.conf import settings
 from datetime import datetime
+from django.db import IntegrityError
 
 
-def ingest_zonefile(zone_file):
-    domain_list = []
+def zonefile2list(zone_file):
+    print("zonefile2list")
+    domain_set = set()
     for line in zone_file:
         try:
-            domain = line.lower().strip().split()[0][:-1].decode('ascii')
-            domain_list.append(domain)
+            domain_set.add(line.decode('ascii').split()[0][:-1].lower().strip())
         except IndexError:
             traceback.print_exc()
 
+    zone_file.close()
+    domain_list = list(domain_set)
+    del domain_set
+
+    print("Sorting")
     domain_list.sort()
+    print("zonefile2list done")
     return domain_list
 
 
@@ -116,22 +123,30 @@ class CZDS:
         else:
             sys.stderr.write('Failed to download zone from {0} with code {1}\n'.format(url, status_code))
 
+        print("Decompressing zonefile")
         data = io.BytesIO(gzip.decompress(f.getbuffer()))
-        domain_list = ingest_zonefile(data)
-        return domain_list
+        f.close()
+        return zonefile2list(data)
 
     def load_zonefile(self, zone):
         if not self.is_authenticated:
             self.authenticate()
 
         link = f"https://czds-download-api.icann.org/czds/downloads/{zone}.zone"
-        for domain in myicann.download_one_zone(link):
+        for domain in self.download_one_zone(link):
             try:
                 name, tld = domain.split('.')
-                obj, created = Domain.objects.update_or_create(
+                d = Domain.objects.create(
                     domain=domain,
                     tld=tld,
+                    is_new=True,
                 )
             except ValueError as e:
-                print(f"ERROR: domain={domain}")
+                #print(f"ERROR: domain={domain}")
                 # traceback.print_exc()
+                continue
+
+            except IntegrityError as e:
+                traceback.print_exc()
+                continue
+
