@@ -35,5 +35,4 @@ def diff_files(old_file, new_file):
     for line in new_file:
         new_list.append(line.strip())
 
-
     return new_list

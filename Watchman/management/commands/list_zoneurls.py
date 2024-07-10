@@ -9,4 +9,4 @@ class Command(BaseCommand):
         links = myicann.get_zone_links()
         for l in links:
             print(l)
-            #data = myicann.download_one_zone(l)
+            # data = myicann.download_one_zone(l)
