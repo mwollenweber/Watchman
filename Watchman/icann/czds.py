@@ -6,8 +6,7 @@ import traceback
 import json
 import cgi
 import gzip
-from Watchman.models import Domain
-from datetime import datetime
+from Watchman.models import Domains
 from django.conf import settings
 from datetime import datetime
 from django.db import IntegrityError
@@ -136,7 +135,7 @@ class CZDS:
         for domain in self.download_one_zone(link):
             try:
                 name, tld = domain.split('.')
-                d = Domain.objects.create(
+                d = Domains.objects.create(
                     domain=domain,
                     tld=tld,
                     is_new=True,
@@ -149,4 +148,3 @@ class CZDS:
             except IntegrityError as e:
                 traceback.print_exc()
                 continue
-

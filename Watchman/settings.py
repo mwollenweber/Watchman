@@ -11,6 +11,7 @@ DBPASSWORD = os.getenv('DBPASSWORD') or warn("No Database Password set in enviro
 DBHOST = os.getenv('DBHOST') or warn("No Database Host set in environment variable DBHOST")
 ICANN_USERNAME = os.getenv('ICANN_USERNAME') or warn("No ICANN Username set in environment variable ICANN_USERNAME")
 ICANN_PASSWORD = os.getenv('ICANN_PASSWORD') or warn("No ICANN Password set in environment variable ICANN_PASSWORD")
+BATCH_SIZE = os.getenv('BATCH_SIZE') or 50000
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
