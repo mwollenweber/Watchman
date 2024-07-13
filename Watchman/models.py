@@ -1,19 +1,22 @@
 from django.db import models
 
 
-class Clients(models.Model):
+class Client(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255, unique=True, db_index=True, blank=False, null=False)
+    is_active = models.BooleanField(default=False, db_index=True)
+    is_verified = models.BooleanField(default=False, db_index=True)
+    max_seats = models.IntegerField(default=0)
 
 
-class Domains(models.Model):
+class Domain(models.Model):
     domain = models.CharField(max_length=255, primary_key=True)
     tld = models.CharField(max_length=255, blank=False, null=False, db_index=True)
     first_seen = models.DateTimeField(auto_now_add=True, blank=True)
     is_new = models.BooleanField(default=True, blank=True, db_index=True)
 
 
-class NewDomains(models.Model):
+class NewDomain(models.Model):
     domain = models.CharField(max_length=255, primary_key=True)
     tld = models.CharField(max_length=255, blank=False, null=False, db_index=True)
     first_seen = models.DateTimeField(auto_now_add=True, blank=True)
@@ -21,9 +24,9 @@ class NewDomains(models.Model):
     meh = models.DateTimeField(auto_now_add=True, blank=True)
 
 
-class Matches(models.Model):
-    domain = models.ForeignKey(Domains, on_delete=models.CASCADE)
-    client = models.ForeignKey(Clients, on_delete=models.CASCADE)
+class Match(models.Model):
+    domain = models.ForeignKey(Domain, on_delete=models.CASCADE)
+    client = models.ForeignKey(Client, on_delete=models.CASCADE)
     is_new = models.BooleanField(default=True, blank=True, db_index=True)
 
 
@@ -35,3 +38,25 @@ class ZoneList(models.Model):
 
     # f"https://czds-download-api.icann.org/czds/downloads/{zone}.zone"
     url = models.CharField(max_length=255, blank=True, null=True)
+
+
+
+class SearchMethod(models.Model):
+    name = models.CharField(max_length=255, primary_key=True)
+    is_enabled = models.BooleanField(default=True, blank=True, db_index=True)
+
+
+class Search(models.Model):
+    client = models.ForeignKey(Client, on_delete=models.CASCADE)
+    method = models.ForeignKey(SearchMethod, on_delete=models.CASCADE)
+    criteria = models.CharField(max_length=255, blank=True, null=True)
+    created = models.DateTimeField(auto_now_add=True)
+    last_updated = models.DateTimeField(auto_now=True)
+    last_ran = models.DateTimeField(blank=True, null=True)
+    interval = models.IntegerField(default=1440, blank=True, null=True) #in minutes
+
+
+
+
+
+

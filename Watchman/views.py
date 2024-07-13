@@ -14,6 +14,7 @@ def current_datetime(request):
     html = "<html><body>It is now %s.</body></html>" % now
     return HttpResponse(html)
 
+
 def index(request):
     if request.method == 'GET':
         template = loader.get_template('base.html')

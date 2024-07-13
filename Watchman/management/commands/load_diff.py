@@ -18,3 +18,4 @@ class Command(BaseCommand):
         except FileNotFoundError:
             traceback.print_exc()
             return
+

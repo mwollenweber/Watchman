@@ -2,10 +2,11 @@ import glob
 import Levenshtein
 import os
 import traceback
+import re
 from time import time
 from django.db import IntegrityError
 from django.conf import settings
-from Watchman.models import Domains, NewDomains
+from Watchman.models import Domain, NewDomain
 
 MAX_ITERATIONS = 11000000000
 
@@ -14,12 +15,12 @@ def load_diff(domain_list):
     for domain in domain_list:
         try:
             name, tld = domain.split('.')
-            d = Domains.objects.create(
+            d = Domain.objects.create(
                 domain=domain,
                 tld=tld,
                 is_new=True,
             )
-            NewDomains.objects.create(
+            NewDomain.objects.create(
                 domain=domain,
                 tld=tld,
             )
@@ -29,7 +30,7 @@ def load_diff(domain_list):
             continue
 
         except IntegrityError as e:
-            traceback.print_exc()
+            #traceback.print_exc()
             continue
 
 
@@ -93,3 +94,37 @@ def diff_files(old_file, new_file):
         new_list.append(line.strip())
 
     return new_list
+
+
+class MatchMethod:
+    def __init__(self, criteria):
+        self.name = None
+        self.criteria = None
+
+    def run(self, target_list):
+        raise NotImplementedError("Must override method")
+
+
+#this is a stupid way for substring...
+class MatchSubString(MatchMethod):
+    def __init__(self, criteria):
+        self.name = "substring"
+        self.criteria = criteria.lower()
+
+    def run(self, target_list):
+        hit_list = []
+        for target in target_list:
+            if self.criteria in target:
+                hit_list.append(target)
+        return hit_list
+
+
+class MatchRegEx(MatchMethod):
+    def __init__(self, criteria):
+        self.name = "regex"
+        self.criteria = criteria
+
+    def run(self, target_list):
+        hit_list = []
+
+        return hit_list
