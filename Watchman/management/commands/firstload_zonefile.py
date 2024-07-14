@@ -1,9 +1,11 @@
-import traceback
+import logging
 from django.core.management.base import BaseCommand
 from Watchman.icann import czds
 from Watchman.models import Domains
 from Watchman.settings import BATCH_SIZE
 from django.db import IntegrityError
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -30,21 +32,20 @@ class Command(BaseCommand):
                 batch_list.append(d)
                 count += 1
                 if count % BATCH_SIZE == 0:
-                    print(f"count={count}")
+                    logging.debug(f"count={count}")
                     Domains.objects.bulk_create(batch_list)
                     batch_list = []
 
             except ValueError as e:
-                #print(f"ERROR: domain={domain}")
-                # traceback.print_exc()
+                # logging.debug(f"ERROR: domain={domain}")
                 continue
 
             except IntegrityError as e:
-                traceback.print_exc()
+                logging.error(e)
                 batch_list = []
 
         if len(batch_list) > 0:
             try:
                 Domains.objects.bulk_create(batch_list)
             except IntegrityError as e:
-                traceback.print_exc()
+                logging.error(e)

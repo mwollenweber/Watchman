@@ -3,10 +3,13 @@ import Levenshtein
 import os
 import traceback
 import re
+import logging
 from time import time
 from django.db import IntegrityError
 from django.conf import settings
 from Watchman.models import Domain, NewDomain
+
+logger = logging.getLogger(__name__)
 
 MAX_ITERATIONS = 11000000000
 
@@ -25,12 +28,10 @@ def load_diff(domain_list):
                 tld=tld,
             )
         except ValueError as e:
-            # print(f"ERROR: domain={domain}")
-            # traceback.print_exc()
             continue
 
         except IntegrityError as e:
-            #traceback.print_exc()
+            logging.debug(e, exc_info=True)
             continue
 
 
@@ -58,8 +59,8 @@ def memory_diff_files(old_file, new_file):
         old = old_file.read().split()
         new = new_file.read().split()
         return diff_lists(old, new)
-    except IOError:
-        traceback.print_exc()
+    except IOError as e:
+        logging.error(e, exc_info=True)
 
 
 def diff_files(old_file, new_file):
@@ -80,14 +81,14 @@ def diff_files(old_file, new_file):
 
         count += 1
         if count > MAX_ITERATIONS:
-            print("MAX ITERATIONS HIT. Quitting")
+            logging.warn("MAX ITERATIONS HIT. Quitting")
             break
 
         if len(new) < 1:
             break
 
-        # if count % 100000 == 0:
-        #     print(f"count={count}")
+        if count % 100000 == 0:
+            logging.debug(f"count={count}")
 
     new_list.append(new)
     for line in new_file:
@@ -105,7 +106,7 @@ class MatchMethod:
         raise NotImplementedError("Must override method")
 
 
-#this is a stupid way for substring...
+# this is a stupid way for substring...
 class MatchSubString(MatchMethod):
     def __init__(self, criteria):
         self.name = "substring"
@@ -123,6 +124,18 @@ class MatchRegEx(MatchMethod):
     def __init__(self, criteria):
         self.name = "regex"
         self.criteria = criteria
+
+    def run(self, target_list):
+        hit_list = []
+
+        return hit_list
+
+
+class MatchEditDistance(MatchMethod):
+    def __init__(self, criteria, distance=42):
+        self.name = "edit_distance"
+        self.criteria = criteria
+        self.distance = distance
 
     def run(self, target_list):
         hit_list = []

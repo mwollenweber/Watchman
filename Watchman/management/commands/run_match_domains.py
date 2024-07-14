@@ -1,8 +1,11 @@
 import traceback
 import re
+import logging
 from django.core.management.base import BaseCommand
-from Watchman.tools import MatchSubString
+from Watchman.tools import MatchSubString, MatchRegEx
 from Watchman.models import Domain, NewDomain
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -12,13 +15,16 @@ class Command(BaseCommand):
     def handle(self, **options):
         method = options["method"]
         if method == "substring":
-            print("trying substring")
-            match = MatchSubString("insomniac")
+            logging.debug("trying substring")
+            match = MatchSubString("axon")
+        elif method == "regex":
+            logging.debug("trying regex")
+            match = MatchRegEx("insomniac")
         else:
-            print(f"No match for {method}")
+            logging.debug(f"No match for {method}")
             return
 
-        everything = Domain.objects.all().values_list('domain', flat=True)
+        everything = NewDomain.objects.all().values_list('domain', flat=True)
         hit_list = match.run(everything)
         for hit in hit_list:
-            print(hit)
+            logging.debug(hit)

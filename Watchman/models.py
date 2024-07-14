@@ -40,7 +40,6 @@ class ZoneList(models.Model):
     url = models.CharField(max_length=255, blank=True, null=True)
 
 
-
 class SearchMethod(models.Model):
     name = models.CharField(max_length=255, primary_key=True)
     is_enabled = models.BooleanField(default=True, blank=True, db_index=True)
@@ -49,14 +48,10 @@ class SearchMethod(models.Model):
 class Search(models.Model):
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
     method = models.ForeignKey(SearchMethod, on_delete=models.CASCADE)
+    database = models.CharField(max_length=255, blank=False, null=False, db_index=True)
     criteria = models.CharField(max_length=255, blank=True, null=True)
+    tolerance = models.IntegerField(default=0, blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
-    last_ran = models.DateTimeField(blank=True, null=True)
-    interval = models.IntegerField(default=1440, blank=True, null=True) #in minutes
-
-
-
-
-
-
+    last_ran = models.DateTimeField(blank=True, null=True, db_index=True)
+    interval = models.IntegerField(default=1440, blank=True, null=True, db_index=True)  # in minutes

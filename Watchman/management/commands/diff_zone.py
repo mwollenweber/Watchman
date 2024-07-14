@@ -1,8 +1,9 @@
-import glob
-import os
-import traceback
+import logging
 from django.core.management.base import BaseCommand
 from Watchman.tools import diff_files, getZonefiles
+
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -14,10 +15,10 @@ class Command(BaseCommand):
         try:
             old = open(oldfile, "r")
             new = open(newfile, "r")
-        except FileNotFoundError:
-            traceback.print_exc()
+        except FileNotFoundError as e:
+            logger.error(e)
             return
 
         diff = diff_files(old, new)
         for domain in diff:
-            print(f"{domain}")
+            logging.debug(f"{domain}")

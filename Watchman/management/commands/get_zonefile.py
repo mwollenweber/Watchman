@@ -1,7 +1,10 @@
+import logging
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from datetime import datetime
 from Watchman.icann import czds
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -22,6 +25,6 @@ class Command(BaseCommand):
             outfile.write(f"{line}\n")
             count += 1
             if count % 10000 == 0:
-                print(f"{count} domains written to {filename}")
+                logger.debug(f"{count} domains written to {filename}")
 
-        print("Done")
+        logger.debug("Done")

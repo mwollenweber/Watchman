@@ -2,32 +2,33 @@ import logging
 import io
 import sys
 import requests
-import traceback
 import json
 import cgi
 import gzip
-from Watchman.models import Domains
+from Watchman.models import Domain
 from django.conf import settings
 from datetime import datetime
 from django.db import IntegrityError
 
+logger = logging.getLogger(__name__)
+
 
 def zonefile2list(zone_file):
-    print("zonefile2list")
+    logger.debug("zonefile2list")
     domain_set = set()
     for line in zone_file:
         try:
             domain_set.add(line.decode('ascii').split()[0][:-1].lower().strip())
-        except IndexError:
-            traceback.print_exc()
+        except IndexError as e:
+            logger.error(e)
 
     zone_file.close()
     domain_list = list(domain_set)
     del domain_set
 
-    print("Sorting")
+    logger.debug("Sorting")
     domain_list.sort()
-    print("zonefile2list done")
+    logger.debug("zonefile2list done")
     return domain_list
 
 
@@ -82,10 +83,10 @@ class CZDS:
 
         if status_code == 200:
             zone_links = links_response.json()
-            print(f'{len(zone_links)} zones downloaded')
+            logger.debug(f'{len(zone_links)} zones downloaded')
             return zone_links
         elif status_code == 401:
-            print("The access_token has been expired. Re-authenticate")
+            logger.debug("The access_token has been expired. Re-authenticate")
             self.is_authenticated = False
             access_token = self.authenticate()
             self.get_zone_links()
@@ -94,7 +95,7 @@ class CZDS:
             return None
 
     def download_one_zone(self, url):
-        print("{0}: Downloading zone file from {1}".format(str(datetime.now()), url))
+        logger.debug("{0}: Downloading zone file from {1}".format(str(datetime.now()), url))
         if not self.is_authenticated:
             self.authenticate()
 
@@ -112,17 +113,17 @@ class CZDS:
             f = io.BytesIO()
             for chunk in download_zone_response.iter_content(1024):
                 f.write(chunk)
-            print(f"Completed downloading {filename}")
+            logger.debug(f"Completed downloading {filename}")
 
         elif status_code == 401:
-            print("The access_token has been expired")
+            logger.error("The access_token has been expired")
             self.is_authenticated = False
         elif status_code == 404:
-            print("No zone file found for {0}".format(url))
+            logger.error("No zone file found for {0}".format(url))
         else:
             sys.stderr.write('Failed to download zone from {0} with code {1}\n'.format(url, status_code))
 
-        print("Decompressing zonefile")
+        logger.debug("Decompressing zonefile")
         data = io.BytesIO(gzip.decompress(f.getbuffer()))
         f.close()
         return zonefile2list(data)
@@ -135,16 +136,15 @@ class CZDS:
         for domain in self.download_one_zone(link):
             try:
                 name, tld = domain.split('.')
-                d = Domains.objects.create(
+                d = Domain.objects.create(
                     domain=domain,
                     tld=tld,
                     is_new=True,
                 )
             except ValueError as e:
-                #print(f"ERROR: domain={domain}")
-                # traceback.print_exc()
+                # logger.debug(f"ERROR: domain={domain}")
                 continue
 
             except IntegrityError as e:
-                traceback.print_exc()
+                logger.error(e)
                 continue
