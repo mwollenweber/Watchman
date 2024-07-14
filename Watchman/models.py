@@ -55,3 +55,35 @@ class Search(models.Model):
     last_updated = models.DateTimeField(auto_now=True)
     last_ran = models.DateTimeField(blank=True, null=True, db_index=True)
     interval = models.IntegerField(default=1440, blank=True, null=True, db_index=True)  # in minutes
+
+
+class WhoisRecord(models.Model):
+    domain = models.ForeignKey(Domain, on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+    last_updated = models.DateTimeField(auto_now=True)
+
+
+class MXRecord(models.Model):
+    tdstamp = models.DateTimeField(auto_now_add=True, db_index=True)
+    record = models.CharField(max_length=255, blank=True, null=True, db_index=True)
+    domain = models.ForeignKey(Domain, on_delete=models.CASCADE, db_index=True)
+    ip = models.GenericIPAddressField(db_index=True, blank=True, null=True)
+
+
+class WebPage(models.Model):
+    domain = models.ForeignKey(Domain, on_delete=models.CASCADE)
+    page = models.CharField(db_index=True, blank=True, null=True)
+    tdstamp = models.DateTimeField(auto_now_add=True, db_index=True)
+    md5 = models.CharField(max_length=32, db_index=True, blank=True, null=True)
+    size = models.IntegerField(default=0, db_index=True, blank=True, null=True)
+    status_code = models.IntegerField(default=0, db_index=True, blank=True, null=True)
+    ip = models.GenericIPAddressField(db_index=True, blank=True, null=True)
+
+
+class PingRecord(models.Model):
+    tdstamp = models.DateTimeField(auto_now_add=True, db_index=True)
+    domain = models.ForeignKey(Domain, on_delete=models.CASCADE)
+    fqdn = models.CharField(max_length=255, db_index=True, blank=True, null=True)
+    ip = models.GenericIPAddressField(db_index=True, blank=True, null=True)
+    alive = models.BooleanField(default=False, db_index=True)
+

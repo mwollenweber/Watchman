@@ -31,7 +31,7 @@ def load_diff(domain_list):
             continue
 
         except IntegrityError as e:
-            logging.debug(e, exc_info=True)
+            # logging.debug(e, exc_info=True)
             continue
 
 
