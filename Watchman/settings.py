@@ -1,6 +1,7 @@
 import os
 from warnings import warn
 from pathlib import Path
+from logging.config import dictConfig
 
 # Celery settings
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
@@ -12,6 +13,7 @@ DBHOST = os.getenv('DBHOST') or warn("No Database Host set in environment variab
 ICANN_USERNAME = os.getenv('ICANN_USERNAME') or warn("No ICANN Username set in environment variable ICANN_USERNAME")
 ICANN_PASSWORD = os.getenv('ICANN_PASSWORD') or warn("No ICANN Password set in environment variable ICANN_PASSWORD")
 BATCH_SIZE = os.getenv('BATCH_SIZE') or 50000
+MIN_ZONE_TIME = os.getenv('MIN_ZONE_TIME') or 14400
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -149,6 +151,13 @@ LOGGING = {
             "filename": "general.log",
             "formatter": "verbose",
         },
+        'celery': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'celery.log',
+            'formatter': 'simple',
+            'maxBytes': 1024 * 1024 * 100,  # 100 mb
+        },
     },
     "root": {
         "handlers": ["console"],
@@ -157,8 +166,13 @@ LOGGING = {
     "loggers": {
         "django": {
             "handlers": ["console"],
-            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
-            "propagate": False,
+            #"level": os.getenv("DJANGO_LOG_LEVEL", "DEBUG"),
+            "level": "DEBUG",
+        },
+        'celery': {
+            "handlers": ["console"],
+            #"level": os.getenv("DJANGO_LOG_LEVEL", "DEBUG"),
+            "level": "DEBUG",
         },
     },
     "formatters": {
@@ -167,8 +181,10 @@ LOGGING = {
                 "style": "{",
             },
             "simple": {
-                "format": "{levelname} {message}",
+                "format": "{asctime} {levelname} {message}",
                 "style": "{",
             },
         },
 }
+
+dictConfig(LOGGING)

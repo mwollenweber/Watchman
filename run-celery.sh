@@ -17,4 +17,4 @@ else
 	echo "WARN: $script_directory/config.rc does not exist."
 fi
 
-exec $script_directory/env/bin/celery -A Watchman  worker --loglevel=info
+exec $script_directory/env/bin/celery -A Watchman  worker --loglevel=DEBUG

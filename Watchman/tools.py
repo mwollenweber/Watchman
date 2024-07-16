@@ -7,11 +7,13 @@ import logging
 from time import time
 from django.db import IntegrityError
 from django.conf import settings
-from Watchman.models import Domain, NewDomain
+from Watchman.models import Domain, NewDomain, ZoneList
 
 logger = logging.getLogger(__name__)
 
 MAX_ITERATIONS = 11000000000
+
+
 
 
 def load_diff(domain_list):
@@ -36,13 +38,14 @@ def load_diff(domain_list):
 
 
 def getZonefiles(zone):
+    logger.info("Getting zone files for %s", zone)
     files = glob.glob(f"{settings.TEMP_DIR}/*-{zone}.txt")
     modified_files = list()
     current_time = time()
 
     for zonefile in files:
         time_delta = current_time - os.path.getmtime(zonefile)
-        time_delta_days = time_delta / (60 * 60 * 24) * 7
+        time_delta_days = time_delta / (60 * 60 * 24)
         if time_delta_days < 60:
             modified_files.append(zonefile)
 

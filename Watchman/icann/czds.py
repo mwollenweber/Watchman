@@ -32,6 +32,21 @@ def zonefile2list(zone_file):
     return domain_list
 
 
+def update_zonefile(zone):
+    count = 0
+    myicann = CZDS()
+    myicann.authenticate()
+    link = f"https://czds-download-api.icann.org/czds/downloads/{zone}.zone"
+    filename = f"{settings.TEMP_DIR}/{datetime.now():%Y%m%d}-{zone}.txt"
+    outfile = open(filename, "w")
+
+    for line in myicann.download_one_zone(link):
+        outfile.write(f"{line}\n")
+        count += 1
+        if count % 10000 == 0:
+            logger.debug(f"{count} domains written to {filename}")
+
+
 class CZDS:
     def __init__(self, username=None, password=None):
         self.username = username or settings.ICANN_USERNAME
@@ -68,13 +83,14 @@ class CZDS:
             self.access_token = access_token
             return access_token
         elif status_code == 404:
-            sys.stderr.write("Invalid url " + auth_url)
+            logger.error("Invalid url " + auth_url)
         elif status_code == 401:
-            sys.stderr.write("Invalid username/password. Please reset your password via web")
+            logger.error("Invalid username/password. Please reset your password via web")
         elif status_code == 500:
-            sys.stderr.write("Internal server error. Please try again later")
+            logger.error("Internal server error. Please try again later")
         else:
-            sys.stderr.write("Failed to authenticate user {0} with error code {1}".format(username, status_code))
+            logger.error("Failed to authenticate with error code {0}".format(status_code))
+            logger.error(response.text)
 
     def get_zone_links(self):
         links_url = self.base_url + "/czds/downloads/links"
@@ -91,7 +107,7 @@ class CZDS:
             access_token = self.authenticate()
             self.get_zone_links()
         else:
-            sys.stderr.write("Failed to get zone links from {0} with error code {1}\n".format(links_url, status_code))
+            logger.error("Failed to get zone links from {0} with error code {1}\n".format(links_url, status_code))
             return None
 
     def download_one_zone(self, url):
@@ -121,7 +137,7 @@ class CZDS:
         elif status_code == 404:
             logger.error("No zone file found for {0}".format(url))
         else:
-            sys.stderr.write('Failed to download zone from {0} with code {1}\n'.format(url, status_code))
+            logger.error('Failed to download zone from {0} with code {1}\n'.format(url, status_code))
 
         logger.debug("Decompressing zonefile")
         data = io.BytesIO(gzip.decompress(f.getbuffer()))
@@ -138,13 +154,12 @@ class CZDS:
                 name, tld = domain.split('.')
                 d = Domain.objects.create(
                     domain=domain,
-                    tld=tld,
-                    is_new=True,
-                )
+                    defaults={
+                        'tld': tld,
+                        'is_new': True,
+                    })
             except ValueError as e:
                 # logger.debug(f"ERROR: domain={domain}")
                 continue
-
             except IntegrityError as e:
-                logger.error(e)
                 continue

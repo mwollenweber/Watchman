@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from django.db import models
 
 
@@ -8,12 +9,18 @@ class Client(models.Model):
     is_verified = models.BooleanField(default=False, db_index=True)
     max_seats = models.IntegerField(default=0)
 
+    def __str__(self):
+        return self.name
+
 
 class Domain(models.Model):
     domain = models.CharField(max_length=255, primary_key=True)
     tld = models.CharField(max_length=255, blank=False, null=False, db_index=True)
     first_seen = models.DateTimeField(auto_now_add=True, blank=True)
     is_new = models.BooleanField(default=True, blank=True, db_index=True)
+
+    def __str__(self):
+        return self.domain
 
 
 class NewDomain(models.Model):
@@ -22,6 +29,10 @@ class NewDomain(models.Model):
     first_seen = models.DateTimeField(auto_now_add=True, blank=True)
     is_processed = models.BooleanField(default=False, blank=True, db_index=True)
     meh = models.DateTimeField(auto_now_add=True, blank=True)
+    list_display = ['domain', 'tld']
+
+    def __str__(self):
+        return self.domain
 
 
 class Match(models.Model):
@@ -29,15 +40,33 @@ class Match(models.Model):
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
     is_new = models.BooleanField(default=True, blank=True, db_index=True)
 
+    list_display = ['domain', 'client', 'is_new']
+
+    class Meta:
+        verbose_name = 'Match'
+        verbose_name_plural = 'Matches'
+
+
+class MatchHit(models.Model):
+    hit = models.CharField(max_length=255, db_index=True)
+    match = models.ForeignKey(Match, on_delete=models.CASCADE)
+    is_new = models.BooleanField(default=True, blank=True, db_index=True)
+    created = models.DateTimeField(auto_now_add=True, blank=True)
+
 
 class ZoneList(models.Model):
     name = models.CharField(max_length=255, primary_key=True)
-    update_interval = models.IntegerField(default=1440, blank=True, null=True)
+    update_interval = models.IntegerField(default=28800, blank=True, null=True)
     last_updated = models.DateTimeField(auto_now=True)
-    next_update = models.DateTimeField(blank=True, null=True)
+    last_completed = models.DateTimeField(blank=True, null=True, default=datetime.now() - timedelta(days=365))
+    status = models.CharField(max_length=32, default="unknown", blank=True, null=True, db_index=True)
+    enabled = models.BooleanField(default=True, db_index=True)
 
-    # f"https://czds-download-api.icann.org/czds/downloads/{zone}.zone"
     url = models.CharField(max_length=255, blank=True, null=True)
+    list_display = ['name', 'last_updated', 'update_interval']
+
+    def __str__(self):
+        return self.name
 
 
 class SearchMethod(models.Model):
@@ -56,6 +85,10 @@ class Search(models.Model):
     last_ran = models.DateTimeField(blank=True, null=True, db_index=True)
     interval = models.IntegerField(default=1440, blank=True, null=True, db_index=True)  # in minutes
 
+    class Meta:
+        verbose_name = 'Search'
+        verbose_name_plural = 'Searches'
+
 
 class WhoisRecord(models.Model):
     domain = models.ForeignKey(Domain, on_delete=models.CASCADE)
@@ -64,7 +97,7 @@ class WhoisRecord(models.Model):
 
 
 class MXRecord(models.Model):
-    tdstamp = models.DateTimeField(auto_now_add=True, db_index=True)
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
     record = models.CharField(max_length=255, blank=True, null=True, db_index=True)
     domain = models.ForeignKey(Domain, on_delete=models.CASCADE, db_index=True)
     ip = models.GenericIPAddressField(db_index=True, blank=True, null=True)
@@ -73,7 +106,7 @@ class MXRecord(models.Model):
 class WebPage(models.Model):
     domain = models.ForeignKey(Domain, on_delete=models.CASCADE)
     page = models.CharField(db_index=True, blank=True, null=True)
-    tdstamp = models.DateTimeField(auto_now_add=True, db_index=True)
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
     md5 = models.CharField(max_length=32, db_index=True, blank=True, null=True)
     size = models.IntegerField(default=0, db_index=True, blank=True, null=True)
     status_code = models.IntegerField(default=0, db_index=True, blank=True, null=True)
@@ -81,9 +114,17 @@ class WebPage(models.Model):
 
 
 class PingRecord(models.Model):
-    tdstamp = models.DateTimeField(auto_now_add=True, db_index=True)
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
     domain = models.ForeignKey(Domain, on_delete=models.CASCADE)
     fqdn = models.CharField(max_length=255, db_index=True, blank=True, null=True)
     ip = models.GenericIPAddressField(db_index=True, blank=True, null=True)
     alive = models.BooleanField(default=False, db_index=True)
 
+
+class ActorRecord(models.Model):
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
+    ip = models.GenericIPAddressField(db_index=True, blank=True, null=True)
+    email = models.CharField(max_length=255, db_index=True, blank=True, null=True)
+    first_name = models.CharField(max_length=255, db_index=True, blank=True, null=True)
+    last_name = models.CharField(max_length=255, db_index=True, blank=True, null=True)
+    alias = models.CharField(max_length=255, db_index=True, blank=True, null=True)
