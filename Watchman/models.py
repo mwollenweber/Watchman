@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
+from django.utils import timezone
 from django.db import models
 
 
@@ -57,8 +58,8 @@ class MatchHit(models.Model):
 class ZoneList(models.Model):
     name = models.CharField(max_length=255, primary_key=True)
     update_interval = models.IntegerField(default=28800, blank=True, null=True)
-    last_updated = models.DateTimeField(auto_now=True)
-    last_completed = models.DateTimeField(blank=True, null=True, default=datetime.now() - timedelta(days=365))
+    last_updated = models.DateTimeField(blank=True, null=True, default=timezone.now() - timedelta(days=365))
+    last_completed = models.DateTimeField(blank=True, null=True, default=timezone.now() - timedelta(days=365))
     status = models.CharField(max_length=32, default="unknown", blank=True, null=True, db_index=True)
     enabled = models.BooleanField(default=True, db_index=True)
 

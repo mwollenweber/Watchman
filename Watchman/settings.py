@@ -13,7 +13,8 @@ DBHOST = os.getenv('DBHOST') or warn("No Database Host set in environment variab
 ICANN_USERNAME = os.getenv('ICANN_USERNAME') or warn("No ICANN Username set in environment variable ICANN_USERNAME")
 ICANN_PASSWORD = os.getenv('ICANN_PASSWORD') or warn("No ICANN Password set in environment variable ICANN_PASSWORD")
 BATCH_SIZE = os.getenv('BATCH_SIZE') or 50000
-MIN_ZONE_TIME = os.getenv('MIN_ZONE_TIME') or 14400
+MIN_ZONE_TIME = os.getenv('MIN_ZONE_TIME') or 14400 #seconds
+ZONE_UPDATE_INTERVAL = os.getenv('ZONE_UPDATE_INTERVAL') or 600.0 #seconds
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent

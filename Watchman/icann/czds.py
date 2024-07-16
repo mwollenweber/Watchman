@@ -7,7 +7,7 @@ import cgi
 import gzip
 from Watchman.models import Domain
 from django.conf import settings
-from datetime import datetime
+from django.utils import timezone
 from django.db import IntegrityError
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ def update_zonefile(zone):
     myicann = CZDS()
     myicann.authenticate()
     link = f"https://czds-download-api.icann.org/czds/downloads/{zone}.zone"
-    filename = f"{settings.TEMP_DIR}/{datetime.now():%Y%m%d}-{zone}.txt"
+    filename = f"{settings.TEMP_DIR}/{timezone.now():%Y%m%d}-{zone}.txt"
     outfile = open(filename, "w")
 
     for line in myicann.download_one_zone(link):
@@ -111,7 +111,7 @@ class CZDS:
             return None
 
     def download_one_zone(self, url):
-        logger.debug("{0}: Downloading zone file from {1}".format(str(datetime.now()), url))
+        logger.debug("{0}: Downloading zone file from {1}".format(str(timezone.now()), url))
         if not self.is_authenticated:
             self.authenticate()
 

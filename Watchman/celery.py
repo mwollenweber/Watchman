@@ -1,5 +1,6 @@
 import os
 from celery import Celery
+from django.conf import settings
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Watchman.settings')
 
@@ -21,7 +22,7 @@ app.conf.beat_schedule = {
     # },
     'update_zones': {
         'task': 'update_zones',
-        'schedule': 3600.0,
+        'schedule': settings.ZONE_UPDATE_INTERVAL,
     },
     #clean tmp
 
