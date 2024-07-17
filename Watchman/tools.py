@@ -16,13 +16,13 @@ MAX_ITERATIONS = 11000000000
 def run_search(method, criteria, target_list, tolerance=None):
     logger.info(f"running search: {method} {criteria}")
 
-    if method == "substring":
+    if f"{method}" == "substring":
         logging.debug("trying substring")
         match = MatchSubString(criteria)
-    elif method == "regex":
+    elif f"{method}" == "regex":
         logging.debug("trying regex")
         match = MatchRegEx(criteria)
-    elif method == "strdistance":
+    elif f"{method}" == "strdistance":
         logging.debug("trying strdistance")
         match = MatchEditDistance(criteria, tolerance=tolerance)
     else:
