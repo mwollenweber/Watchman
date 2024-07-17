@@ -1,11 +1,11 @@
 import glob
-import Levenshtein
 import os
 import re
 import logging
 from time import time
 from django.db import IntegrityError
 from django.conf import settings
+from Levenshtein import distance
 from Watchman.models import Domain, NewDomain
 
 logger = logging.getLogger(__name__)
@@ -152,9 +152,12 @@ class MatchEditDistance(MatchMethod):
     def __init__(self, criteria, tolerance=42):
         self.name = "edit_distance"
         self.criteria = criteria
-        self.distance = tolerance
+        self.tolerance = tolerance
 
     def run(self, target_list):
         hit_list = []
+        for target in target_list:
+            if distance(target, self.criteria) < self.tolerance:
+                hit_list.append(target)
 
         return hit_list
