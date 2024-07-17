@@ -1,7 +1,6 @@
 import glob
 import Levenshtein
 import os
-import traceback
 import re
 import logging
 from time import time
@@ -25,7 +24,7 @@ def load_diff(domain_list):
             )
             NewDomain.objects.create(
                 domain=domain,
-                tld=tld,
+                tld=tld
             )
         except ValueError as e:
             continue
@@ -35,6 +34,7 @@ def load_diff(domain_list):
             continue
 
 
+# fixme. I always want to delta more than 24 hours
 def getZonefiles(zone):
     logger.info("Getting zone files for %s", zone)
     files = glob.glob(f"{settings.TEMP_DIR}/*-{zone}.txt")
@@ -44,11 +44,12 @@ def getZonefiles(zone):
     for zonefile in files:
         time_delta = current_time - os.path.getmtime(zonefile)
         time_delta_days = time_delta / (60 * 60 * 24)
-        if time_delta_days < 60:
+        if time_delta_days < 4:
             modified_files.append(zonefile)
 
     modified_files.sort(key=lambda x: os.path.getmtime(x))
-    return modified_files[-2], modified_files[-1]
+    logger.debug(f"DIFFING: {modified_files[0]} {modified_files[-1]}")
+    return modified_files[0], modified_files[-1]
 
 
 def diff_lists(oldlist, newlist):
@@ -87,9 +88,6 @@ def diff_files(old_file, new_file):
 
         if len(new) < 1:
             break
-
-        if count % 100000 == 0:
-            logging.debug(f"count={count}")
 
     new_list.append(new)
     for line in new_file:

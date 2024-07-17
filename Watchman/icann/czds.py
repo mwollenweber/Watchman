@@ -36,11 +36,13 @@ def update_zonefile(zone):
     count = 0
     myicann = CZDS()
     myicann.authenticate()
+    logger.info("Downloading")
     link = f"https://czds-download-api.icann.org/czds/downloads/{zone}.zone"
     filename = f"{settings.TEMP_DIR}/{timezone.now():%Y%m%d}-{zone}.txt"
-    outfile = open(filename, "w")
 
-    for line in myicann.download_one_zone(link):
+    zone_list = myicann.download_one_zone(link)
+    outfile = open(filename, "w")
+    for line in zone_list:
         outfile.write(f"{line}\n")
         count += 1
         if count % 10000 == 0:
@@ -139,9 +141,9 @@ class CZDS:
         else:
             logger.error('Failed to download zone from {0} with code {1}\n'.format(url, status_code))
 
+        logger.info(f"Done downloading {url}")
         logger.debug("Decompressing zonefile")
         data = io.BytesIO(gzip.decompress(f.getbuffer()))
-        f.close()
         return zonefile2list(data)
 
     def load_zonefile(self, zone):
@@ -154,10 +156,9 @@ class CZDS:
                 name, tld = domain.split('.')
                 d = Domain.objects.create(
                     domain=domain,
-                    defaults={
-                        'tld': tld,
-                        'is_new': True,
-                    })
+                    tld=tld,
+                    is_new=True
+                )
             except ValueError as e:
                 # logger.debug(f"ERROR: domain={domain}")
                 continue

@@ -24,6 +24,8 @@ app.conf.beat_schedule = {
         'task': 'update_zones',
         'schedule': settings.ZONE_UPDATE_INTERVAL,
     },
+    #run matches
+
     #clean tmp
 
 

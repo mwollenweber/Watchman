@@ -162,18 +162,18 @@ LOGGING = {
     },
     "root": {
         "handlers": ["console"],
-        "level": "DEBUG",
+        "level": "INFO",
     },
     "loggers": {
         "django": {
             "handlers": ["console"],
-            #"level": os.getenv("DJANGO_LOG_LEVEL", "DEBUG"),
-            "level": "DEBUG",
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            #"level": "DEBUG",
         },
         'celery': {
             "handlers": ["console"],
-            #"level": os.getenv("DJANGO_LOG_LEVEL", "DEBUG"),
-            "level": "DEBUG",
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            #"level": "DEBUG",
         },
     },
     "formatters": {

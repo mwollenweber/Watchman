@@ -60,6 +60,9 @@ class ZoneList(models.Model):
     update_interval = models.IntegerField(default=28800, blank=True, null=True)
     last_updated = models.DateTimeField(blank=True, null=True, default=timezone.now() - timedelta(days=365))
     last_completed = models.DateTimeField(blank=True, null=True, default=timezone.now() - timedelta(days=365))
+    last_diffed = models.DateTimeField(blank=True, null=True, default=timezone.now() - timedelta(days=365))
+    last_error = models.DateTimeField(blank=True, null=True, default=timezone.now() - timedelta(days=365))
+    error_message = models.TextField(blank=True, null=True)
     status = models.CharField(max_length=32, default="unknown", blank=True, null=True, db_index=True)
     enabled = models.BooleanField(default=True, db_index=True)
 

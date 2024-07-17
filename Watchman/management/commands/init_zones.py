@@ -5,13 +5,10 @@ from Watchman.models import ZoneList
 from datetime import timedelta
 from django.utils import timezone
 
-
-
 logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-
     def handle(self, **options):
         logger.info("Initializing new zones")
         myicann = czds.CZDS()
