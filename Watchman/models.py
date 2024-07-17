@@ -77,21 +77,33 @@ class SearchMethod(models.Model):
     name = models.CharField(max_length=255, primary_key=True)
     is_enabled = models.BooleanField(default=True, blank=True, db_index=True)
 
+    def __str__(self):
+        return f"{self.name}"
+
 
 class Search(models.Model):
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
     method = models.ForeignKey(SearchMethod, on_delete=models.CASCADE)
-    database = models.CharField(max_length=255, blank=False, null=False, db_index=True)
-    criteria = models.CharField(max_length=255, blank=True, null=True)
+    database = models.CharField(max_length=255, blank=True, null=True, default="newdomains", db_index=True)
+    criteria = models.CharField(max_length=255)
     tolerance = models.IntegerField(default=0, blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
-    last_updated = models.DateTimeField(auto_now=True)
-    last_ran = models.DateTimeField(blank=True, null=True, db_index=True)
-    interval = models.IntegerField(default=1440, blank=True, null=True, db_index=True)  # in minutes
+    last_updated = models.DateTimeField(blank=True, null=True, default=timezone.now() - timedelta(days=365))
+    last_ran = models.DateTimeField(blank=True, null=True, default=timezone.now() - timedelta(days=365))
+    update_interval = models.IntegerField(default=1440, blank=True, null=True, db_index=True)  # in minutes
+    is_active = models.BooleanField(default=True, blank=True, db_index=True)
+    last_completed = models.DateTimeField(blank=True, null=True, default=timezone.now() - timedelta(days=365))
+
+    list_display = ['client', 'method', 'criteria']
+
+    def __str__(self):
+        return f"{self.client}: {self.method}('{self.criteria}')"
 
     class Meta:
         verbose_name = 'Search'
         verbose_name_plural = 'Searches'
+
+
 
 
 class WhoisRecord(models.Model):

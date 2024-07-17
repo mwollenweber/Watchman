@@ -15,6 +15,7 @@ ICANN_PASSWORD = os.getenv('ICANN_PASSWORD') or warn("No ICANN Password set in e
 BATCH_SIZE = os.getenv('BATCH_SIZE') or 50000
 MIN_ZONE_TIME = os.getenv('MIN_ZONE_TIME') or 14400 #seconds
 ZONE_UPDATE_INTERVAL = os.getenv('ZONE_UPDATE_INTERVAL') or 600.0 #seconds
+MIN_UPDATE_INTERVAL = os.getenv('MIN_UPDATE_INTERVAL') or 600.0
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent

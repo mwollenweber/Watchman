@@ -6,11 +6,30 @@ import logging
 from time import time
 from django.db import IntegrityError
 from django.conf import settings
-from Watchman.models import Domain, NewDomain, ZoneList
+from Watchman.models import Domain, NewDomain
 
 logger = logging.getLogger(__name__)
 
 MAX_ITERATIONS = 11000000000
+
+
+def run_search(method, criteria, target_list, tolerance=None):
+    logger.info(f"running search: {method} {criteria}")
+
+    if method == "substring":
+        logging.debug("trying substring")
+        match = MatchSubString(criteria)
+    elif method == "regex":
+        logging.debug("trying regex")
+        match = MatchRegEx(criteria)
+    elif method == "strdistance":
+        logging.debug("trying strdistance")
+        match = MatchEditDistance(criteria, tolerance=tolerance)
+    else:
+        logging.error(f"No match for {method}")
+        return
+
+    return match.run(target_list)
 
 
 def load_diff(domain_list):
@@ -34,7 +53,6 @@ def load_diff(domain_list):
             continue
 
 
-# fixme. I always want to delta more than 24 hours
 def getZonefiles(zone):
     logger.info("Getting zone files for %s", zone)
     files = glob.glob(f"{settings.TEMP_DIR}/*-{zone}.txt")
@@ -131,10 +149,10 @@ class MatchRegEx(MatchMethod):
 
 
 class MatchEditDistance(MatchMethod):
-    def __init__(self, criteria, distance=42):
+    def __init__(self, criteria, tolerance=42):
         self.name = "edit_distance"
         self.criteria = criteria
-        self.distance = distance
+        self.distance = tolerance
 
     def run(self, target_list):
         hit_list = []

@@ -2,7 +2,7 @@ import traceback
 import re
 import logging
 from django.core.management.base import BaseCommand
-from Watchman.tools import MatchSubString, MatchRegEx
+from Watchman.tools import run_search
 from Watchman.models import Domain, NewDomain
 
 logger = logging.getLogger(__name__)
