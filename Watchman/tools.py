@@ -6,11 +6,50 @@ from time import time
 from django.db import IntegrityError
 from django.conf import settings
 from Levenshtein import distance
+from django.utils import timezone
+from datetime import timedelta
 from Watchman.models import Domain, NewDomain
 
 logger = logging.getLogger(__name__)
 
 MAX_ITERATIONS = 11000000000
+
+
+def diff_zone(zone):
+    logger.info(f"diffing zone {zone}")
+    try:
+        zone.status = "diffing"
+        zone.last_updated = timezone.now()
+        zone.save()
+
+        oldfile, newfile = getZonefiles(zone.name)
+        old = open(oldfile, "r")
+        new = open(newfile, "r")
+        domain_list = diff_files(old, new)
+        load_diff(domain_list)
+
+        zone.status = "good"
+        now = timezone.now()
+        zone.last_updated = now
+        zone.last_completed = now
+        zone.last_diffed = now
+        zone.save()
+        logger.info(f"DONE zone={zone.name}")
+
+    except FileNotFoundError as e:
+        logger.error(e)
+        zone.last_error = timezone.now()
+        zone.error_message = f"{e}"
+        zone.status = "error"
+        zone.save()
+        return
+
+    except Exception as e:
+        logger.error(e)
+        zone.last_error = timezone.now()
+        zone.error_message = f"{e}"
+        zone.status = "error"
+        zone.save()
 
 
 def run_search(method, criteria, target_list, tolerance=None):
