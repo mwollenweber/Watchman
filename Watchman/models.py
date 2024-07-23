@@ -89,6 +89,7 @@ class Search(models.Model):
     update_interval = models.IntegerField(default=1440, blank=True, null=True, db_index=True)  # in minutes
     is_active = models.BooleanField(default=True, blank=True, db_index=True)
     last_completed = models.DateTimeField(blank=True, null=True, default=timezone.now() - timedelta(days=365))
+    is_approved = models.BooleanField(default=True, blank=True, db_index=True)
 
     list_display = ['client', 'method', 'criteria']
 

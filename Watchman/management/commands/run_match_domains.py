@@ -3,7 +3,7 @@ import re
 import logging
 from django.core.management.base import BaseCommand
 from Watchman.tools import run_search
-from Watchman.models import Domain, NewDomain
+from Watchman.models import Domain, NewDomain, Match
 
 logger = logging.getLogger(__name__)
 

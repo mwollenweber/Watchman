@@ -8,7 +8,7 @@ from django.conf import settings
 from Levenshtein import distance
 from django.utils import timezone
 from datetime import timedelta
-from Watchman.models import Domain, NewDomain
+from Watchman.models import Domain, NewDomain, Match
 
 logger = logging.getLogger(__name__)
 
@@ -180,9 +180,14 @@ class MatchRegEx(MatchMethod):
     def __init__(self, criteria):
         self.name = "regex"
         self.criteria = criteria
+        self.regex = re.compile(criteria,  re.IGNORECASE)
 
     def run(self, target_list):
         hit_list = []
+        for target in target_list:
+            m = self.regex.match(target)
+            if m:
+                hit_list.append(target)
 
         return hit_list
 

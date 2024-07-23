@@ -2,7 +2,7 @@ import logging
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from datetime import timedelta
-from Watchman.models import Search, NewDomain, Domain
+from Watchman.models import Search, NewDomain, Domain, Match
 from Watchman.tools import run_search
 from django.conf import settings
 
