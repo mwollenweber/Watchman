@@ -37,22 +37,18 @@ class NewDomain(models.Model):
 
 
 class Match(models.Model):
+    hit = models.CharField(max_length=255, db_index=True)
     domain = models.ForeignKey(Domain, on_delete=models.CASCADE)
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
     is_new = models.BooleanField(default=True, blank=True, db_index=True)
+    is_reviewed = models.BooleanField(default=False, blank=True, db_index=True)
+    is_fp = models.BooleanField(default=False, blank=True, db_index=True)
+    created = models.DateTimeField(auto_now_add=True, blank=True)
 
-    list_display = ['domain', 'client', 'is_new']
 
     class Meta:
         verbose_name = 'Match'
         verbose_name_plural = 'Matches'
-
-
-class MatchHit(models.Model):
-    hit = models.CharField(max_length=255, db_index=True)
-    match = models.ForeignKey(Match, on_delete=models.CASCADE)
-    is_new = models.BooleanField(default=True, blank=True, db_index=True)
-    created = models.DateTimeField(auto_now_add=True, blank=True)
 
 
 class ZoneList(models.Model):
@@ -102,8 +98,6 @@ class Search(models.Model):
     class Meta:
         verbose_name = 'Search'
         verbose_name_plural = 'Searches'
-
-
 
 
 class WhoisRecord(models.Model):
