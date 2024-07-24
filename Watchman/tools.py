@@ -8,7 +8,7 @@ from django.conf import settings
 from Levenshtein import distance
 from django.utils import timezone
 from datetime import timedelta
-from Watchman.models import Domain, NewDomain, Match
+from Watchman.models import Domain, NewDomain, Match, Search
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +69,56 @@ def run_search(method, criteria, target_list, tolerance=None):
         return
 
     return match.run(target_list)
+
+
+def run_searches():
+    logging.info("Running Searches")
+
+    # run the new domain as target list first
+    logger.info("Running newdomain searches")
+    target_list = NewDomain.objects.all().values_list('domain', flat=True)
+    search_list = Search.objects.filter(is_active=True, database='newdomains')
+    for s in search_list:
+        if s.last_completed < timezone.now() - timedelta(seconds=s.update_interval):
+            if s.last_updated < timezone.now() - timedelta(seconds=settings.MIN_UPDATE_INTERVAL):
+                logger.info(f"{s} on {len(target_list)} domains")
+                # todo = update status timestamps
+                hits = run_search(s.method, s.criteria, target_list, tolerance=s.tolerance) or []
+                for h in hits:
+                    try:
+                        print(f"hit={h}")
+                        Match.objects.get_or_create(
+                            hit=h,
+                            client=s.client,
+                            defaults={
+                                'last_modified': timezone.now(),
+                            }
+                        )
+                    except Exception as e:
+                        logger.error(e)
+
+    # run searches on all domains a
+    logger.info("Running full domain searches")
+    target_list = Domain.objects.all().values_list('domain', flat=True)
+    search_list = Search.objects.filter(is_active=True, database='domains')
+    for s in search_list:
+        if s.last_completed < timezone.now() - timedelta(seconds=s.update_interval):
+            if s.last_updated < timezone.now() - timedelta(seconds=settings.MIN_UPDATE_INTERVAL):
+                logger.info(f"{s} on {len(target_list)} domains")
+                # todo = update status timestamps
+                hits = run_search(s.method, s.criteria, target_list, tolerance=s.tolerance) or []
+                for h in hits:
+                    try:
+                        print(f"hit={h}")
+                        Match.objects.get_or_create(
+                            hit=h,
+                            client=s.client,
+                            defaults={
+                                'last_modified': timezone.now(),
+                            }
+                        )
+                    except Exception as e:
+                        logger.error(e)
 
 
 def load_diff(domain_list):
@@ -183,7 +233,7 @@ class MatchRegEx(MatchMethod):
     def __init__(self, criteria):
         self.name = "regex"
         self.criteria = criteria
-        self.regex = re.compile(criteria,  re.IGNORECASE)
+        self.regex = re.compile(criteria, re.IGNORECASE)
 
     def run(self, target_list):
         hit_list = []

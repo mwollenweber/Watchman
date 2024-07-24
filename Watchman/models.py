@@ -38,13 +38,13 @@ class NewDomain(models.Model):
 
 class Match(models.Model):
     hit = models.CharField(max_length=255, db_index=True)
-    domain = models.ForeignKey(Domain, on_delete=models.CASCADE)
+    #domain = models.ForeignKey(Domain, on_delete=models.CASCADE)
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
     is_new = models.BooleanField(default=True, blank=True, db_index=True)
     is_reviewed = models.BooleanField(default=False, blank=True, db_index=True)
     is_fp = models.BooleanField(default=False, blank=True, db_index=True)
     created = models.DateTimeField(auto_now_add=True, blank=True)
-
+    last_modified = models.DateTimeField(auto_now=True, blank=True)
 
     class Meta:
         verbose_name = 'Match'
