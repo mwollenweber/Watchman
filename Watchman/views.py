@@ -15,6 +15,17 @@ def current_datetime(request):
     return HttpResponse(html)
 
 
+def zone_status(request):
+    if request.method == 'GET':
+        template = loader.get_template('base.html')
+        context = {
+        }
+        return HttpResponse(template.render(context, request))
+
+    elif request.method == 'POST':
+        return HttpResponse("")
+
+
 def index(request):
     if request.method == 'GET':
         template = loader.get_template('base.html')

@@ -161,6 +161,9 @@ class MatchMethod:
     def run(self, target_list):
         raise NotImplementedError("Must override method")
 
+    def update_matches(self, hit_list):
+        logger.info("hitlist")
+
 
 # this is a stupid way for substring...
 class MatchSubString(MatchMethod):
