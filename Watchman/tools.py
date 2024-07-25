@@ -15,6 +15,18 @@ logger = logging.getLogger(__name__)
 MAX_ITERATIONS = 11000000000
 
 
+def expire_new():
+    threshold = timezone.now() - timedelta(days=settings.MAX_NEW_AGE)
+    old = NewDomain.objects.filter(created__lt=threshold, is_expired=False)
+    for m in old.iterator():
+        try:
+            logger.info(f"{m.domain} {m.created}")
+            m.is_expired = True
+            m.save()
+        except Exception as e:
+            logger.error(e)
+
+
 def diff_zone(zone):
     logger.info(f"diffing zone {zone}")
     try:

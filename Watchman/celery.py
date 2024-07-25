@@ -24,6 +24,11 @@ app.conf.beat_schedule = {
         'task': 'run_matches',
         'schedule': settings.MATCH_UPDATE_INTERVAL,
     },
+    'expire_new': {
+        'task': 'expire_new',
+        'schedule': 3600,
+    },
+
     #clean tmp folder
 
     #clean NewDomains
