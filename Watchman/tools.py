@@ -76,7 +76,7 @@ def run_searches():
 
     # run the new domain as target list first
     logger.info("Running newdomain searches")
-    target_list = NewDomain.objects.all().values_list('domain', flat=True)
+    target_list = NewDomain.objects.filter(is_expired=False).values_list('domain', flat=True)
     search_list = Search.objects.filter(is_active=True, database='newdomains')
     for s in search_list:
         if s.last_completed < timezone.now() - timedelta(seconds=s.update_interval):

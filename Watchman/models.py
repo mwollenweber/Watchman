@@ -17,7 +17,7 @@ class Client(models.Model):
 class Domain(models.Model):
     domain = models.CharField(max_length=255, primary_key=True)
     tld = models.CharField(max_length=255, blank=False, null=False, db_index=True)
-    first_seen = models.DateTimeField(auto_now_add=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True, blank=True)
     is_new = models.BooleanField(default=True, blank=True, db_index=True)
 
     def __str__(self):
@@ -27,8 +27,9 @@ class Domain(models.Model):
 class NewDomain(models.Model):
     domain = models.CharField(max_length=255, primary_key=True)
     tld = models.CharField(max_length=255, blank=False, null=False, db_index=True)
-    first_seen = models.DateTimeField(auto_now_add=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True, blank=True)
     is_processed = models.BooleanField(default=False, blank=True, db_index=True)
+    is_expired = models.BooleanField(default=False, db_index=True)
     meh = models.DateTimeField(auto_now_add=True, blank=True)
     list_display = ['domain', 'tld']
 

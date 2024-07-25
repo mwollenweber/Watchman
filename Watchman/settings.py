@@ -17,6 +17,7 @@ MIN_ZONE_TIME = os.getenv('MIN_ZONE_TIME') or 14400 #seconds
 ZONE_UPDATE_INTERVAL = os.getenv('ZONE_UPDATE_INTERVAL') or 600.0 #seconds
 MIN_UPDATE_INTERVAL = os.getenv('MIN_UPDATE_INTERVAL') or 600.0
 MATCH_UPDATE_INTERVAL = os.getenv('MATCH_UPDATE_INTERVAL') or 600.0
+MAX_NEW_AGE = os.getenv('MAX_NEW_AGE') or 7
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent

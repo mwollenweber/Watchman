@@ -16,10 +16,6 @@ app.autodiscover_tasks()
 
 
 app.conf.beat_schedule = {
-    # 'test': {
-    #     'task': 'test',
-    #     'schedule': 60.0,
-    # },
     'update_zones': {
         'task': 'update_zones',
         'schedule': settings.ZONE_UPDATE_INTERVAL,
@@ -28,9 +24,12 @@ app.conf.beat_schedule = {
         'task': 'run_matches',
         'schedule': settings.MATCH_UPDATE_INTERVAL,
     },
-    #clean tmp
+    #clean tmp folder
+
+    #clean NewDomains
 
     #clean matches
 
+    #run Watch
 
 }
