@@ -13,7 +13,14 @@ else
 fi
 
 brew update
+echo "Installing Postgres"
 brew install postgresql
 brew services start postgresql
+
+echo "Installing Redis"
+brew install redis
+brew services start redis
 createuser postgres
 createdb watchman
+
+echo "DONE"
