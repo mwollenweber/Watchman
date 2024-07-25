@@ -1,7 +1,7 @@
 import logging
 from django.core.management.base import BaseCommand
 from Watchman.icann import czds
-from Watchman.models import Domains
+from Watchman.models import Domain
 from Watchman.settings import BATCH_SIZE
 from django.db import IntegrityError
 
@@ -24,7 +24,7 @@ class Command(BaseCommand):
         for domain in myicann.download_one_zone(link):
             try:
                 name, tld = domain.split('.')
-                d = Domains(
+                d = Domain(
                     domain=domain,
                     tld=tld,
                     is_new=False,
@@ -33,7 +33,7 @@ class Command(BaseCommand):
                 count += 1
                 if count % BATCH_SIZE == 0:
                     logging.debug(f"count={count}")
-                    Domains.objects.bulk_create(batch_list)
+                    Domain.objects.bulk_create(batch_list)
                     batch_list = []
 
             except ValueError as e:
@@ -46,6 +46,6 @@ class Command(BaseCommand):
 
         if len(batch_list) > 0:
             try:
-                Domains.objects.bulk_create(batch_list)
+                Domain.objects.bulk_create(batch_list)
             except IntegrityError as e:
                 logging.error(e)
