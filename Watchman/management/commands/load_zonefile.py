@@ -1,6 +1,8 @@
 from django.core.management.base import BaseCommand
 from Watchman.icann import czds
 
+#Loads as Zonefile into the databse
+
 
 class Command(BaseCommand):
     def add_arguments(self, parser):

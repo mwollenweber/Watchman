@@ -32,7 +32,7 @@ class Command(BaseCommand):
                 batch_list.append(d)
                 count += 1
                 if count % BATCH_SIZE == 0:
-                    logging.debug(f"count={count}")
+                    logging.info(f"count={count}")
                     Domain.objects.bulk_create(batch_list)
                     batch_list = []
 

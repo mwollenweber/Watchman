@@ -19,6 +19,7 @@ class Domain(models.Model):
     tld = models.CharField(max_length=255, blank=False, null=False, db_index=True)
     created = models.DateTimeField(auto_now_add=True, blank=True)
     is_new = models.BooleanField(default=True, blank=True, db_index=True)
+    exp_date = models.DateTimeField(default=None, blank=True, null=True)
 
     def __str__(self):
         return self.domain

@@ -17,12 +17,12 @@ class Command(BaseCommand):
         parser.add_argument("zone", type=str)
 
     def handle(self, **options):
-        zonename = options["zone"]
-        logger.info(f"Trying to update zone={zonename}")
-        zone = ZoneList.objects.filter(name=f"{zonename}", enabled=True).first()
-        logger.info(f"Got Zone={zone.name}")
-
         try:
+            zonename = options["zone"]
+            logger.info(f"Trying to update zone={zonename}")
+            zone = ZoneList.objects.filter(name=f"{zonename}").first()
+            logger.info(f"Got Zone={zone.name}")
+
             zone.status = "updating"
             zone.last_updated = timezone.now()
             zone.save()
