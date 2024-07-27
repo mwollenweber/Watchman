@@ -7,6 +7,12 @@ from django.utils.html import escape
 from django.utils.timezone import make_aware
 from django.template import loader
 from django.conf import settings
+from django.contrib.auth.forms import (
+    AuthenticationForm,
+    UserCreationForm,
+)
+from django.contrib.auth import login as auth_login
+from django.views.decorators.http import require_http_methods
 from Watchman.forms import LoginForm
 from Watchman.models import Domain, ZoneList
 
@@ -17,26 +23,59 @@ def current_datetime(request):
     return HttpResponse(html)
 
 
-def user_login(request):
+def index(request):
+    if request.method == 'GET':
+        template = loader.get_template('base.html')
+        context = {
+        }
+        return HttpResponse(template.render(context, request))
+
+    elif request.method == 'POST':
+        return HttpResponse("POST")
+
+
+@require_http_methods(['GET', 'POST'])
+def signup(request):
+    if request.user.is_authenticated:
+        return redirect(index)
+
     if request.method == 'POST':
-        form = LoginForm(request.POST)
+        form = UserCreationForm(request.POST)
         if form.is_valid():
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
-            user = authenticate(request, username=username, password=password)
-            if user:
-                login(request, user)
-                return redirect('/')
+            user = form.save()
+            auth_login(request, user)
+            return redirect(index)
     else:
-        form = LoginForm()
-    return render(request, 'login.html', {'form': form})
+        form = UserCreationForm()
+    context = {
+        'form': form,
+    }
+    return render(request, 'signup.html', context)
+
+
+@require_http_methods(['GET', 'POST'])
+def login(request):
+    if request.user.is_authenticated:
+        return redirect(index)
+
+    if request.method == 'POST':
+        form = AuthenticationForm(request, request.POST)
+        if form.is_valid():
+            auth_login(request, form.get_user())
+            return redirect(request.GET.get('next') or index)
+    else:
+        form = AuthenticationForm()
+    context = {
+        'form': form,
+    }
+    return render(request, 'login.html', context)
 
 
 @login_required()
 def zone_status(request):
     zone_list = ZoneList.objects.filter(enabled=True).all()
     if request.method == 'GET':
-        #if request.content_type == 'application/json':
+        # if request.content_type == 'application/json':
         if 1 == 1:
             ret_list = []
             for zone in zone_list:
@@ -49,7 +88,7 @@ def zone_status(request):
                     'last_completed': zone.last_completed,
                     'last_diffed': zone.last_diffed,
                     'last_error': zone.last_error,
-                    #'error_message': zone.error_messsage,
+                    # 'error_message': zone.error_messsage,
                 })
             ret = {
                 'status': 'success',
@@ -62,14 +101,3 @@ def zone_status(request):
 
     elif request.method == 'POST':
         return HttpResponse("")
-
-
-def index(request):
-    if request.method == 'GET':
-        template = loader.get_template('base.html')
-        context = {
-        }
-        return HttpResponse(template.render(context, request))
-
-    elif request.method == 'POST':
-        return HttpResponse("POST")

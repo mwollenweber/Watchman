@@ -4,7 +4,8 @@ from Watchman import views
 
 urlpatterns = [
     path('', views.index),
-    path('accounts/login/', views.user_login),
+    path('accounts/login/', views.login),
+    path('register/', views.signup),
     #path('logout', logout),
     path('zonestatus/', views.zone_status),
     #path('hits', views.hits),
