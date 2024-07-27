@@ -5,15 +5,15 @@ from django.conf import settings
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Watchman.settings')
 
 app = Celery('Watchman')
+app.conf.timezone = 'UTC'
 app.config_from_object('django.conf:settings', namespace='CELERY')
 app.conf.update(
     task_serializer='pickle',
     result_serializer='pickle',
     accept_content=['pickle']
 )
-app.conf.timezone = 'UTC'
-app.autodiscover_tasks()
 
+app.autodiscover_tasks()
 
 app.conf.beat_schedule = {
     'update_zones': {
@@ -28,13 +28,12 @@ app.conf.beat_schedule = {
         'task': 'expire_new',
         'schedule': 3600,
     },
+    'clean_tmp': {
+        'task': 'clean_tmp',
+        'schedule': 3600,
+    },
+    # clean matches
 
-    #clean tmp folder
-
-    #clean NewDomains
-
-    #clean matches
-
-    #run Watch
+    # run Watch
 
 }

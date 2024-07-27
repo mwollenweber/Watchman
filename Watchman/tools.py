@@ -1,7 +1,7 @@
-import glob
-import os
 import re
 import logging
+import glob
+import os
 from time import time
 from django.db import IntegrityError
 from django.conf import settings
@@ -13,6 +13,17 @@ from Watchman.models import Domain, NewDomain, Match, Search
 logger = logging.getLogger(__name__)
 
 MAX_ITERATIONS = 11000000000
+
+
+def clean_temp():
+    files = glob.glob(f"{settings.TEMP_DIR}/*txt")
+    current_time = time()
+
+    for f in files:
+        time_delta_days = (current_time - os.path.getmtime(f)) / (60 * 60 * 24)
+        if time_delta_days > settings.MAX_TEMP_AGE:
+            logger.info(f"deleting: {f}")
+            os.remove(f)
 
 
 def expire_new():

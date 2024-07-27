@@ -115,9 +115,13 @@ class MXRecord(models.Model):
     domain = models.ForeignKey(Domain, on_delete=models.CASCADE, db_index=True)
     ip = models.GenericIPAddressField(db_index=True, blank=True, null=True)
 
+    def __str__(self):
+        return f"{self.record}: {self.ip}"
+
 
 class WebPage(models.Model):
     domain = models.ForeignKey(Domain, on_delete=models.CASCADE)
+    fqdn = models.CharField(max_length=255, db_index=True, blank=True, null=True)
     page = models.CharField(db_index=True, blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True, db_index=True)
     md5 = models.CharField(max_length=32, db_index=True, blank=True, null=True)
@@ -131,7 +135,7 @@ class PingRecord(models.Model):
     domain = models.ForeignKey(Domain, on_delete=models.CASCADE)
     fqdn = models.CharField(max_length=255, db_index=True, blank=True, null=True)
     ip = models.GenericIPAddressField(db_index=True, blank=True, null=True)
-    alive = models.BooleanField(default=False, db_index=True)
+    alive = models.BooleanField(default=True, db_index=True)
 
 
 class ActorRecord(models.Model):

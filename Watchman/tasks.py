@@ -4,7 +4,7 @@ from Watchman.models import ZoneList
 from django.utils import timezone
 from datetime import timedelta
 from Watchman.icann.czds import update_zonefile
-from Watchman.tools import diff_files, getZonefiles, load_diff, run_searches, expire_new
+from Watchman.tools import diff_files, getZonefiles, load_diff, run_searches, expire_new, clean_temp
 from .celery import app
 
 logger = get_task_logger(__name__)
@@ -15,10 +15,14 @@ def run_matches():
     run_searches()
 
 
+@app.task(name="clean_tmp")
+def clean_tmp_task():
+    clean_temp()
+
+
 @app.task(name="expire_new")
 def expire_new_task():
     expire_new()
-
 
 
 @app.task(name="test")
