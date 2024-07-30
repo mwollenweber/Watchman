@@ -109,7 +109,6 @@ def run_searches():
                 hits = run_search(s.method, s.criteria, target_list, tolerance=s.tolerance) or []
                 for h in hits:
                     try:
-                        print(f"hit={h}")
                         Match.objects.get_or_create(
                             hit=h,
                             client=s.client,
@@ -132,7 +131,6 @@ def run_searches():
                 hits = run_search(s.method, s.criteria, target_list, tolerance=s.tolerance) or []
                 for h in hits:
                     try:
-                        print(f"hit={h}")
                         Match.objects.get_or_create(
                             hit=h,
                             client=s.client,

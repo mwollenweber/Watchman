@@ -13,8 +13,7 @@ from django.contrib.auth.forms import (
 )
 from django.contrib.auth import login as auth_login
 from django.views.decorators.http import require_http_methods
-from Watchman.forms import LoginForm
-from Watchman.models import Domain, ZoneList
+from Watchman.models import Domain, ZoneList, Match
 
 
 def current_datetime(request):
@@ -94,6 +93,36 @@ def zone_status(request):
                 'status': 'success',
                 'count': len(ret_list),
                 'zones': ret_list
+            }
+            return JsonResponse(ret)
+        else:
+            return HttpResponse(status=200)
+
+    elif request.method == 'POST':
+        return HttpResponse("")
+
+
+#todo associate user wiht a client and filter
+@login_required()
+def hits(request):
+    hit_list = Match.objects.all()
+    if request.method == 'GET':
+        # if request.content_type == 'application/json':
+        if 1 == 1:
+            ret_list = []
+            for hit in hit_list:
+                ret_list.append({
+                    'name': hit.hit,
+                    'created': hit.created,
+                    'modified': hit.last_modified,
+                    'is_new': hit.is_new,
+                    'is_reviewed': hit.is_reviewed,
+                    'is_fp': hit.is_fp,
+                })
+            ret = {
+                'status': 'success',
+                'count': len(ret_list),
+                'hits': ret_list
             }
             return JsonResponse(ret)
         else:

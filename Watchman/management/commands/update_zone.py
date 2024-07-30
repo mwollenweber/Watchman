@@ -6,10 +6,7 @@ from Watchman.icann.czds import update_zonefile
 from Watchman.models import ZoneList
 from Watchman.tools import diff_zone
 
-
 logger = logging.getLogger(__name__)
-
-
 
 
 class Command(BaseCommand):
@@ -43,4 +40,3 @@ class Command(BaseCommand):
             zone.error_message = f"{e}"
             zone.status = "error"
             zone.save()
-

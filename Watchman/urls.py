@@ -8,6 +8,7 @@ urlpatterns = [
     path('register/', views.signup),
     #path('logout', logout),
     path('zonestatus/', views.zone_status),
+    path('hits/', views.hits),
     #path('hits', views.hits),
     path("admin/", admin.site.urls),
 ]
