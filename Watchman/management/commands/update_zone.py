@@ -36,7 +36,8 @@ class Command(BaseCommand):
 
         except Exception as e:
             logger.error(e)
-            zone.last_error = timezone.now()
-            zone.error_message = f"{e}"
-            zone.status = "error"
-            zone.save()
+            if zone:
+                zone.last_error = timezone.now()
+                zone.error_message = f"{e}"
+                zone.status = "error"
+                zone.save()
