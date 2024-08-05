@@ -28,6 +28,8 @@ TEMPLATE_DIRS = [
 
 TEMP_DIR = f"{BASE_DIR}/tmp"
 
+#AUTH_USER_MODEL = 'Watchman.CustomUser'
+AUTH_USER_MODEL = "accounts.CustomUser"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -47,6 +49,7 @@ ALLOWED_HOSTS = [
 # Application definition
 INSTALLED_APPS = [
     "Watchman",
+    "accounts",
     "bootstrap5",
     "django.contrib.admin",
     "django.contrib.auth",
