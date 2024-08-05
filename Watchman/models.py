@@ -10,6 +10,7 @@ class Client(models.Model):
     is_active = models.BooleanField(default=False, db_index=True)
     is_verified = models.BooleanField(default=False, db_index=True)
     max_seats = models.IntegerField(default=0)
+    domain = models.CharField(max_length=255, db_index=True)
 
     def __str__(self):
         return self.name
@@ -18,6 +19,9 @@ class Client(models.Model):
 class ClientUser(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     client = models.OneToOneField(Client, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.user.email}"
 
 
 class Domain(models.Model):
@@ -46,7 +50,6 @@ class NewDomain(models.Model):
 
 class Match(models.Model):
     hit = models.CharField(max_length=255, db_index=True)
-    # domain = models.ForeignKey(Domain, on_delete=models.CASCADE)
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
     is_new = models.BooleanField(default=True, blank=True, db_index=True)
     is_reviewed = models.BooleanField(default=False, blank=True, db_index=True)
@@ -77,17 +80,14 @@ class ZoneList(models.Model):
         return self.name
 
 
-class SearchMethod(models.Model):
-    name = models.CharField(max_length=255, primary_key=True)
-    is_enabled = models.BooleanField(default=True, blank=True, db_index=True)
-
-    def __str__(self):
-        return f"{self.name}"
-
-
 class Search(models.Model):
+    SEARCH_METHOD_CHOICES = (
+        ('regex', 'regex'),
+        ('substring', 'substring'),
+        ('strdistance', 'strdistance'),
+    )
+
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
-    method = models.ForeignKey(SearchMethod, on_delete=models.CASCADE)
     database = models.CharField(max_length=255, blank=True, null=True, default="newdomains", db_index=True)
     criteria = models.CharField(max_length=255)
     tolerance = models.IntegerField(default=0, blank=True, null=True)
@@ -98,6 +98,8 @@ class Search(models.Model):
     is_active = models.BooleanField(default=True, blank=True, db_index=True)
     last_completed = models.DateTimeField(blank=True, null=True, default=timezone.now() - timedelta(days=365))
     is_approved = models.BooleanField(default=True, blank=True, db_index=True)
+    method = models.CharField(max_length=20, choices=SEARCH_METHOD_CHOICES)
+
 
     list_display = ['client', 'method', 'criteria']
 
