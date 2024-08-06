@@ -23,7 +23,7 @@ class Command(BaseCommand):
 
         for domain in myicann.download_one_zone(link):
             try:
-                name, tld = domain.split('.')
+                name, tld = domain.split(".")
                 d = Domain(
                     domain=domain,
                     tld=tld,

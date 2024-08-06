@@ -4,7 +4,14 @@ from Watchman.models import ZoneList
 from django.utils import timezone
 from datetime import timedelta
 from Watchman.icann.czds import update_zonefile
-from Watchman.tools import diff_files, getZonefiles, load_diff, run_searches, expire_new, clean_temp
+from Watchman.tools import (
+    diff_files,
+    getZonefiles,
+    load_diff,
+    run_searches,
+    expire_new,
+    clean_temp,
+)
 from .celery import app
 
 logger = get_task_logger(__name__)
@@ -104,8 +111,12 @@ def update_zones():
 
     for zone in healthy_zones:
         try:
-            if zone.last_completed < timezone.now() - timedelta(seconds=zone.update_interval):
-                if zone.last_updated < timezone.now() - timedelta(seconds=settings.MIN_ZONE_TIME):
+            if zone.last_completed < timezone.now() - timedelta(
+                seconds=zone.update_interval
+            ):
+                if zone.last_updated < timezone.now() - timedelta(
+                    seconds=settings.MIN_ZONE_TIME
+                ):
                     logger.info(f"Enqueing {zone.name}")
                     update_zone.apply_async(args=[zone])
 

@@ -19,4 +19,3 @@ class Command(BaseCommand):
             logger.info(f"Disabling {z.name}")
             z.enabled = False
             z.save()
-

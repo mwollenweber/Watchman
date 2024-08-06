@@ -1,4 +1,5 @@
 from datetime import timedelta
+from django.contrib.postgres.fields.jsonb import JSONField
 from accounts.models import CustomUser
 from django.utils import timezone
 from django.db import models
@@ -6,7 +7,9 @@ from django.db import models
 
 class Client(models.Model):
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255, unique=True, db_index=True, blank=False, null=False)
+    name = models.CharField(
+        max_length=255, unique=True, db_index=True, blank=False, null=False
+    )
     is_active = models.BooleanField(default=False, db_index=True)
     is_verified = models.BooleanField(default=False, db_index=True)
     max_seats = models.IntegerField(default=0)
@@ -42,7 +45,7 @@ class NewDomain(models.Model):
     is_processed = models.BooleanField(default=False, blank=True, db_index=True)
     is_expired = models.BooleanField(default=False, db_index=True)
     meh = models.DateTimeField(auto_now_add=True, blank=True)
-    list_display = ['domain', 'tld']
+    list_display = ["domain", "tld"]
 
     def __str__(self):
         return self.domain
@@ -56,25 +59,36 @@ class Match(models.Model):
     is_fp = models.BooleanField(default=False, blank=True, db_index=True)
     created = models.DateTimeField(auto_now_add=True, blank=True)
     last_modified = models.DateTimeField(auto_now=True, blank=True)
+    has_alerted = models.BooleanField(default=False, db_index=True)
 
     class Meta:
-        verbose_name = 'Match'
-        verbose_name_plural = 'Matches'
+        verbose_name = "Match"
+        verbose_name_plural = "Matches"
 
 
 class ZoneList(models.Model):
     name = models.CharField(max_length=255, primary_key=True)
     update_interval = models.IntegerField(default=28800, blank=True, null=True)
-    last_updated = models.DateTimeField(blank=True, null=True, default=timezone.now() - timedelta(days=365))
-    last_completed = models.DateTimeField(blank=True, null=True, default=timezone.now() - timedelta(days=365))
-    last_diffed = models.DateTimeField(blank=True, null=True, default=timezone.now() - timedelta(days=365))
-    last_error = models.DateTimeField(blank=True, null=True, default=timezone.now() - timedelta(days=365))
+    last_updated = models.DateTimeField(
+        blank=True, null=True, default=timezone.now() - timedelta(days=365)
+    )
+    last_completed = models.DateTimeField(
+        blank=True, null=True, default=timezone.now() - timedelta(days=365)
+    )
+    last_diffed = models.DateTimeField(
+        blank=True, null=True, default=timezone.now() - timedelta(days=365)
+    )
+    last_error = models.DateTimeField(
+        blank=True, null=True, default=timezone.now() - timedelta(days=365)
+    )
     error_message = models.TextField(blank=True, null=True)
-    status = models.CharField(max_length=32, default="unknown", blank=True, null=True, db_index=True)
+    status = models.CharField(
+        max_length=32, default="unknown", blank=True, null=True, db_index=True
+    )
     enabled = models.BooleanField(default=True, db_index=True)
 
     url = models.CharField(max_length=255, blank=True, null=True)
-    list_display = ['name', 'last_updated', 'update_interval']
+    list_display = ["name", "last_updated", "update_interval"]
 
     def __str__(self):
         return self.name
@@ -82,33 +96,42 @@ class ZoneList(models.Model):
 
 class Search(models.Model):
     SEARCH_METHOD_CHOICES = (
-        ('regex', 'regex'),
-        ('substring', 'substring'),
-        ('strdistance', 'strdistance'),
+        ("regex", "regex"),
+        ("substring", "substring"),
+        ("strdistance", "strdistance"),
     )
 
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
-    database = models.CharField(max_length=255, blank=True, null=True, default="newdomains", db_index=True)
+    database = models.CharField(
+        max_length=255, blank=True, null=True, default="newdomains", db_index=True
+    )
     criteria = models.CharField(max_length=255)
     tolerance = models.IntegerField(default=0, blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
-    last_updated = models.DateTimeField(blank=True, null=True, default=timezone.now() - timedelta(days=365))
-    last_ran = models.DateTimeField(blank=True, null=True, default=timezone.now() - timedelta(days=365))
-    update_interval = models.IntegerField(default=1440, blank=True, null=True, db_index=True)  # in minutes
+    last_updated = models.DateTimeField(
+        blank=True, null=True, default=timezone.now() - timedelta(days=365)
+    )
+    last_ran = models.DateTimeField(
+        blank=True, null=True, default=timezone.now() - timedelta(days=365)
+    )
+    update_interval = models.IntegerField(
+        default=1440, blank=True, null=True, db_index=True
+    )  # in minutes
     is_active = models.BooleanField(default=True, blank=True, db_index=True)
-    last_completed = models.DateTimeField(blank=True, null=True, default=timezone.now() - timedelta(days=365))
+    last_completed = models.DateTimeField(
+        blank=True, null=True, default=timezone.now() - timedelta(days=365)
+    )
     is_approved = models.BooleanField(default=True, blank=True, db_index=True)
     method = models.CharField(max_length=20, choices=SEARCH_METHOD_CHOICES)
 
-
-    list_display = ['client', 'method', 'criteria']
+    list_display = ["client", "method", "criteria"]
 
     def __str__(self):
         return f"{self.client}: {self.method}('{self.criteria}')"
 
     class Meta:
-        verbose_name = 'Search'
-        verbose_name_plural = 'Searches'
+        verbose_name = "Search"
+        verbose_name_plural = "Searches"
 
 
 class WhoisRecord(models.Model):
@@ -125,6 +148,24 @@ class MXRecord(models.Model):
 
     def __str__(self):
         return f"{self.record}: {self.ip}"
+
+
+class ClientAlert(models.Model):
+    ALERT_TYPE_CHOICES = (
+        ("slack", "slack"),
+        ("email", "email"),
+        ("s3", "s3"),
+    )
+    alert_type = models.CharField(
+        max_length=255, db_index=True, choices=ALERT_TYPE_CHOICES
+    )
+    client = models.ForeignKey(Client, on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+    last_updated = models.DateTimeField(auto_now=True)
+    last_run = models.DateTimeField(auto_now_add=True, blank=True)
+    last_completed = models.DateTimeField(auto_now_add=True, blank=True)
+    is_active = models.BooleanField(default=True, db_index=True)
+    config = models.JSONField(blank=True, null=True)
 
 
 class WebPage(models.Model):
@@ -152,4 +193,3 @@ class ActorRecord(models.Model):
     email = models.CharField(max_length=255, db_index=True, blank=True, null=True)
     first_name = models.CharField(max_length=255, db_index=True, blank=True, null=True)
     last_name = models.CharField(max_length=255, db_index=True, blank=True, null=True)
-    alias = models.CharField(max_length=255, db_index=True, blank=True, null=True)

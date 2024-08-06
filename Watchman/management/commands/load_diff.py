@@ -20,4 +20,3 @@ class Command(BaseCommand):
         except FileNotFoundError as e:
             logger.error(e)
             return
-

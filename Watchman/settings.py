@@ -4,21 +4,33 @@ from pathlib import Path
 from logging.config import dictConfig
 
 # Celery settings
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_BROKER_URL = "redis://localhost:6379/0"
 
-DBNAME = os.getenv('DBNAME') or warn("No Database Name set in environment variable DBNAME")
-DBUSER = os.getenv('DBUSER') or warn("No Database User set in environment variable DBUSER")
-DBPASSWORD = os.getenv('DBPASSWORD') or warn("No Database Password set in environment variable DBPASSWORD")
-DBHOST = os.getenv('DBHOST') or warn("No Database Host set in environment variable DBHOST")
-ICANN_USERNAME = os.getenv('ICANN_USERNAME') or warn("No ICANN Username set in environment variable ICANN_USERNAME")
-ICANN_PASSWORD = os.getenv('ICANN_PASSWORD') or warn("No ICANN Password set in environment variable ICANN_PASSWORD")
-BATCH_SIZE = os.getenv('BATCH_SIZE') or 50000
-MIN_ZONE_TIME = os.getenv('MIN_ZONE_TIME') or 14400 #seconds
-ZONE_UPDATE_INTERVAL = os.getenv('ZONE_UPDATE_INTERVAL') or 600.0 #seconds
-MIN_UPDATE_INTERVAL = os.getenv('MIN_UPDATE_INTERVAL') or 600.0
-MATCH_UPDATE_INTERVAL = os.getenv('MATCH_UPDATE_INTERVAL') or 600.0
-MAX_NEW_AGE = os.getenv('MAX_NEW_AGE') or 7 #days
-MAX_TEMP_AGE = os.getenv('MAX_TEMP_AGE') or 7 #days
+DBNAME = os.getenv("DBNAME") or warn(
+    "No Database Name set in environment variable DBNAME"
+)
+DBUSER = os.getenv("DBUSER") or warn(
+    "No Database User set in environment variable DBUSER"
+)
+DBPASSWORD = os.getenv("DBPASSWORD") or warn(
+    "No Database Password set in environment variable DBPASSWORD"
+)
+DBHOST = os.getenv("DBHOST") or warn(
+    "No Database Host set in environment variable DBHOST"
+)
+ICANN_USERNAME = os.getenv("ICANN_USERNAME") or warn(
+    "No ICANN Username set in environment variable ICANN_USERNAME"
+)
+ICANN_PASSWORD = os.getenv("ICANN_PASSWORD") or warn(
+    "No ICANN Password set in environment variable ICANN_PASSWORD"
+)
+BATCH_SIZE = os.getenv("BATCH_SIZE") or 50000
+MIN_ZONE_TIME = os.getenv("MIN_ZONE_TIME") or 14400  # seconds
+ZONE_UPDATE_INTERVAL = os.getenv("ZONE_UPDATE_INTERVAL") or 600.0  # seconds
+MIN_UPDATE_INTERVAL = os.getenv("MIN_UPDATE_INTERVAL") or 600.0
+MATCH_UPDATE_INTERVAL = os.getenv("MATCH_UPDATE_INTERVAL") or 600.0
+MAX_NEW_AGE = os.getenv("MAX_NEW_AGE") or 7  # days
+MAX_TEMP_AGE = os.getenv("MAX_TEMP_AGE") or 7  # days
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,7 +40,7 @@ TEMPLATE_DIRS = [
 
 TEMP_DIR = f"{BASE_DIR}/tmp"
 
-#AUTH_USER_MODEL = 'Watchman.CustomUser'
+# AUTH_USER_MODEL = 'Watchman.CustomUser'
 AUTH_USER_MODEL = "accounts.CustomUser"
 
 # Quick-start development settings - unsuitable for production
@@ -41,9 +53,9 @@ SECRET_KEY = "django-insecure-s9n)tio7xscb%r4s_1v^rptbj*bb@ycm18(_@=%#mla#u#tut2
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    '.herokuapp.com',
-    'localhost',
-    '127.0.0.1',
+    ".herokuapp.com",
+    "localhost",
+    "127.0.0.1",
 ]
 
 # Application definition
@@ -67,8 +79,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
 
 ROOT_URLCONF = "Watchman.urls"
@@ -93,13 +105,13 @@ WSGI_APPLICATION = "Watchman.wsgi.application"
 
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': DBNAME,
-        'USER': DBUSER,
-        'PASSWORD': DBPASSWORD,
-        'HOST': DBHOST,
-        'PORT': '5432',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "NAME": DBNAME,
+        "USER": DBUSER,
+        "PASSWORD": DBPASSWORD,
+        "HOST": DBHOST,
+        "PORT": "5432",
     }
 }
 
@@ -136,7 +148,7 @@ USE_TZ = True
 
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 STATIC_HOST = os.environ.get("DJANGO_STATIC_HOST", "")
 STATIC_URL = STATIC_HOST + "/static/"
 
@@ -159,12 +171,12 @@ LOGGING = {
             "filename": "general.log",
             "formatter": "verbose",
         },
-        'celery': {
-            'level': 'DEBUG',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': 'celery.log',
-            'formatter': 'simple',
-            'maxBytes': 1024 * 1024 * 100,  # 100 mb
+        "celery": {
+            "level": "DEBUG",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": "celery.log",
+            "formatter": "simple",
+            "maxBytes": 1024 * 1024 * 100,  # 100 mb
         },
     },
     "root": {
@@ -175,24 +187,24 @@ LOGGING = {
         "django": {
             "handlers": ["console"],
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
-            #"level": "DEBUG",
+            # "level": "DEBUG",
         },
-        'celery': {
+        "celery": {
             "handlers": ["console"],
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
-            #"level": "DEBUG",
+            # "level": "DEBUG",
         },
     },
     "formatters": {
-            "verbose": {
-                "format": "{asctime}, {levelname}, {name}, {module}, {message}",
-                "style": "{",
-            },
-            "simple": {
-                "format": "{asctime} {levelname} {message}",
-                "style": "{",
-            },
+        "verbose": {
+            "format": "{asctime}, {levelname}, {name}, {module}, {message}",
+            "style": "{",
         },
+        "simple": {
+            "format": "{asctime} {levelname} {message}",
+            "style": "{",
+        },
+    },
 }
 
 dictConfig(LOGGING)

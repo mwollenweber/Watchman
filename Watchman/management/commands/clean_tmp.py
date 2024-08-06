@@ -14,7 +14,7 @@ class Command(BaseCommand):
         current_time = time()
 
         for f in files:
-            time_delta_days = (current_time - os.path.getmtime(f))/ (60 * 60 * 24)
+            time_delta_days = (current_time - os.path.getmtime(f)) / (60 * 60 * 24)
             if time_delta_days > MAX_TEMP_AGE:
                 logger.info(f"deleting: {f}")
                 os.remove(f)

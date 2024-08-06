@@ -24,7 +24,9 @@ class Command(BaseCommand):
             logging.debug(f"No match for {method}")
             return
 
-        everything = NewDomain.objects.filter(is_expired=False).values_list('domain', flat=True)
+        everything = NewDomain.objects.filter(is_expired=False).values_list(
+            "domain", flat=True
+        )
         hit_list = match.run(everything)
         for hit in hit_list:
             logging.debug(hit)

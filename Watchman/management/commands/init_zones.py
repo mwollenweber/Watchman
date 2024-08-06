@@ -16,15 +16,16 @@ class Command(BaseCommand):
         links = myicann.get_zone_links()
         for url in links:
             try:
-                zone = url.split('/')[-1].split('.')[0]
+                zone = url.split("/")[-1].split(".")[0]
                 logger.debug(f"{zone} {url}")
                 ZoneList.objects.update_or_create(
                     name=zone,
                     defaults={
-                        'enabled': False,
-                        'status': 'init',
-                        'last_updated': timezone.now() - timedelta(days=365),
-                        'last_completed': timezone.now() - timedelta(days=365),
-                    })
+                        "enabled": False,
+                        "status": "init",
+                        "last_updated": timezone.now() - timedelta(days=365),
+                        "last_completed": timezone.now() - timedelta(days=365),
+                    },
+                )
             except Exception as e:
                 logger.error(e)

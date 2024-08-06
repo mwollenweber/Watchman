@@ -99,44 +99,56 @@ def run_searches():
 
     # run the new domain as target list first
     logger.info("Running newdomain searches")
-    target_list = NewDomain.objects.filter(is_expired=False).values_list('domain', flat=True)
-    search_list = Search.objects.filter(is_active=True, database='newdomains')
+    target_list = NewDomain.objects.filter(is_expired=False).values_list(
+        "domain", flat=True
+    )
+    search_list = Search.objects.filter(is_active=True, database="newdomains")
     for s in search_list:
         if s.last_completed < timezone.now() - timedelta(seconds=s.update_interval):
-            if s.last_updated < timezone.now() - timedelta(seconds=settings.MIN_UPDATE_INTERVAL):
+            if s.last_updated < timezone.now() - timedelta(
+                seconds=settings.MIN_UPDATE_INTERVAL
+            ):
                 logger.info(f"{s} on {len(target_list)} domains")
                 # todo = update status timestamps
-                hits = run_search(s.method, s.criteria, target_list, tolerance=s.tolerance) or []
+                hits = (
+                    run_search(s.method, s.criteria, target_list, tolerance=s.tolerance)
+                    or []
+                )
                 for h in hits:
                     try:
                         Match.objects.get_or_create(
                             hit=h,
                             client=s.client,
                             defaults={
-                                'last_modified': timezone.now(),
-                            }
+                                "last_modified": timezone.now(),
+                            },
                         )
                     except Exception as e:
                         logger.error(e)
 
     # run searches on all domains a
     logger.info("Running full domain searches")
-    target_list = Domain.objects.all().values_list('domain', flat=True)
-    search_list = Search.objects.filter(is_active=True, database='domains')
+    target_list = Domain.objects.all().values_list("domain", flat=True)
+    search_list = Search.objects.filter(is_active=True, database="domains")
     for s in search_list:
         if s.last_completed < timezone.now() - timedelta(seconds=s.update_interval):
-            if s.last_updated < timezone.now() - timedelta(seconds=settings.MIN_UPDATE_INTERVAL):
+            if s.last_updated < timezone.now() - timedelta(
+                seconds=settings.MIN_UPDATE_INTERVAL
+            ):
                 logger.info(f"{s} on {len(target_list)} domains")
                 # todo = update status timestamps
-                hits = run_search(s.method, s.criteria, target_list, tolerance=s.tolerance) or []
+                hits = (
+                    run_search(s.method, s.criteria, target_list, tolerance=s.tolerance)
+                    or []
+                )
                 for h in hits:
                     try:
                         Match.objects.get_or_create(
                             hit=h,
                             client=s.client,
                             defaults={
-                                'last_modified': timezone.now(),
-                            }
+                                "last_modified": timezone.now(),
+                            },
                         )
                     except Exception as e:
                         logger.error(e)
@@ -145,16 +157,13 @@ def run_searches():
 def load_diff(domain_list):
     for domain in domain_list:
         try:
-            name, tld = domain.split('.')
+            name, tld = domain.split(".")
             d = Domain.objects.create(
                 domain=domain,
                 tld=tld,
                 is_new=True,
             )
-            NewDomain.objects.create(
-                domain=domain,
-                tld=tld
-            )
+            NewDomain.objects.create(domain=domain, tld=tld)
         except ValueError as e:
             continue
 

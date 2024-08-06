@@ -1,5 +1,16 @@
 from django.contrib import admin
-from Watchman.models import NewDomain, Client, Match, Search, Domain, WebPage, WhoisRecord, PingRecord, ZoneList, ClientUser
+from Watchman.models import (
+    NewDomain,
+    Client,
+    Match,
+    Search,
+    Domain,
+    WebPage,
+    WhoisRecord,
+    PingRecord,
+    ZoneList,
+    ClientUser,
+)
 
 
 admin.site.register(NewDomain)
