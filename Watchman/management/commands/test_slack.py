@@ -1,6 +1,7 @@
 import logging
 from django.core.management.base import BaseCommand
 from Watchman.alerts.slackAlert import test
+
 logger = logging.getLogger(__name__)
 
 

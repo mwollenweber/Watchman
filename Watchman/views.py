@@ -14,7 +14,7 @@ from django.contrib.auth.forms import (
 )
 from django.contrib.auth import login as auth_login
 from django.views.decorators.http import require_http_methods
-from Watchman.models import Domain, ZoneList, Match, ClientUser
+from Watchman.models import Domain, ZoneList, Match, ClientUser, NewDomain
 
 
 def current_datetime(request):
@@ -103,6 +103,28 @@ def zone_status(request):
 
     elif request.method == "POST":
         return HttpResponse("")
+
+
+@require_http_methods(["GET"])
+def new_domains(request):
+    results = []
+    for domain in NewDomain.objects.filter(is_expired=False).all():
+        results.append(
+            {
+                'domain': f"{domain.domain}",
+                'created': f"{domain.created}",
+                'tld': f"{domain.tld}",
+            }
+        )
+
+    #if request.content_type == 'application/json':
+    if 1==1:
+        ret = {
+            "status": "success",
+            "count": len(results),
+            "results": results,
+        }
+        return JsonResponse(ret)
 
 
 @login_required()

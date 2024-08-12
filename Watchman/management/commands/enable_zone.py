@@ -10,12 +10,13 @@ logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     def add_arguments(self, parser):
-        parser.add_argument("zone", type=str)
+        parser.add_argument("zone", nargs="+")
 
     def handle(self, **options):
-        zone = options["zone"]
-        zones = ZoneList.objects.filter(name=zone)
-        for z in zones:
-            logger.info(f"Enabling {z.name}")
-            z.enabled = True
-            z.save()
+        zonename_list = options["zone"]
+        for zonename in zonename_list:
+            zones = ZoneList.objects.filter(name=zonename)
+            for z in zones:
+                logger.info(f"Enabling {z.name}")
+                z.enabled = True
+                z.save()

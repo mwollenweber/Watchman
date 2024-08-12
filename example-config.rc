@@ -4,3 +4,4 @@ export DBPASSWORD=''
 export DBHOST='localhost'
 export ICANN_USERNAME='username@example.com'
 export ICANN_PASSWORD='Abcdef#12345678'
+export MAX_WORKERS=4
