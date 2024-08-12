@@ -111,14 +111,14 @@ def new_domains(request):
     for domain in NewDomain.objects.filter(is_expired=False).all():
         results.append(
             {
-                'domain': f"{domain.domain}",
-                'created': f"{domain.created}",
-                'tld': f"{domain.tld}",
+                "domain": f"{domain.domain}",
+                "created": f"{domain.created}",
+                "tld": f"{domain.tld}",
             }
         )
 
-    #if request.content_type == 'application/json':
-    if 1==1:
+    # if request.content_type == 'application/json':
+    if 1 == 1:
         ret = {
             "status": "success",
             "count": len(results),

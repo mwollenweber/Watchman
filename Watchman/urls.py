@@ -9,6 +9,6 @@ urlpatterns = [
     path("logout", views.logout_view),
     path("zonestatus/", views.zone_status),
     path("hits/", views.hits),
-    path('newdomains/', views.new_domains),
+    path("newdomains/", views.new_domains),
     path("admin/", admin.site.urls),
 ]
