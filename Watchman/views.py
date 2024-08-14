@@ -111,34 +111,36 @@ def zone_status(request):
 @login_required()
 @require_http_methods(["GET"])
 def search(request):
-    required_params = ['value', 'type']
+    required_params = ["value", "type"]
     ret = {
         "status": "error",
     }
-    #if request.content_type == 'application/json':
+    # if request.content_type == 'application/json':
     if 1 == 1:
-        value = request.GET.get('value', None)
-        search_type = request.GET.get('search_type', None)
+        value = request.GET.get("value", None)
+        search_type = request.GET.get("search_type", None)
         results = []
 
-        if search_type == 'new_domain':
+        if search_type == "new_domain":
             data = NewDomain.objects.filter(domain__icontains=value).all()
             for d in data:
                 results.append(d.to_dict())
-        elif search_type == 'domain':
+        elif search_type == "domain":
             data = Domain.objects.filter(domain__icontains=value).all()
             for d in data:
                 results.append(d.to_dict())
 
-        elif search_type == 'fqdn':
+        elif search_type == "fqdn":
             logger.warn("search type fqdn todo")
 
-        return JsonResponse({
-            "status": "success",
-            "search_type": search_type,
-            "results": results,
-            "count": len(results),
-        })
+        return JsonResponse(
+            {
+                "status": "success",
+                "search_type": search_type,
+                "results": results,
+                "count": len(results),
+            }
+        )
 
     return JsonResponse(ret)
 
