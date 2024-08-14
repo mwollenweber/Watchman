@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta, timezone
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
@@ -15,6 +16,8 @@ from django.contrib.auth.forms import (
 from django.contrib.auth import login as auth_login
 from django.views.decorators.http import require_http_methods
 from Watchman.models import Domain, ZoneList, Match, ClientUser, NewDomain
+
+logger = logging.getLogger(__name__)
 
 
 def current_datetime(request):
@@ -105,10 +108,45 @@ def zone_status(request):
         return HttpResponse("")
 
 
+@login_required()
+@require_http_methods(["GET"])
+def search(request):
+    required_params = ['value', 'type']
+    ret = {
+        "status": "error",
+    }
+    #if request.content_type == 'application/json':
+    if 1 == 1:
+        value = request.GET.get('value', None)
+        search_type = request.GET.get('search_type', None)
+        results = []
+
+        if search_type == 'new_domain':
+            data = NewDomain.objects.filter(domain__icontains=value).all()
+            for d in data:
+                results.append(d.to_dict())
+        elif search_type == 'domain':
+            data = Domain.objects.filter(domain__icontains=value).all()
+            for d in data:
+                results.append(d.to_dict())
+
+        elif search_type == 'fqdn':
+            logger.warn("search type fqdn todo")
+
+        return JsonResponse({
+            "status": "success",
+            "search_type": search_type,
+            "results": results,
+            "count": len(results),
+        })
+
+    return JsonResponse(ret)
+
+
 @require_http_methods(["GET"])
 def new_domains(request):
     results = []
-    for domain in NewDomain.objects.filter(is_expired=False).all():
+    for domain in NewDomain.objects.filter(is_expired=False).order_by("created"):
         results.append(
             {
                 "domain": f"{domain.domain}",

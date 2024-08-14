@@ -1,4 +1,5 @@
 from datetime import timedelta
+from django.forms.models import model_to_dict
 from django.contrib.postgres.fields.jsonb import JSONField
 from accounts.models import CustomUser
 from django.utils import timezone
@@ -34,6 +35,9 @@ class Domain(models.Model):
     is_new = models.BooleanField(default=True, blank=True, db_index=True)
     exp_date = models.DateTimeField(default=None, blank=True, null=True)
 
+    def to_dict(self):
+        return model_to_dict(self)
+
     def __str__(self):
         return self.domain
 
@@ -46,6 +50,9 @@ class NewDomain(models.Model):
     is_expired = models.BooleanField(default=False, db_index=True)
     meh = models.DateTimeField(auto_now_add=True, blank=True)
     list_display = ["domain", "tld"]
+
+    def to_dict(self):
+        return model_to_dict(self)
 
     def __str__(self):
         return self.domain
@@ -193,3 +200,46 @@ class ActorRecord(models.Model):
     email = models.CharField(max_length=255, db_index=True, blank=True, null=True)
     first_name = models.CharField(max_length=255, db_index=True, blank=True, null=True)
     last_name = models.CharField(max_length=255, db_index=True, blank=True, null=True)
+
+
+class Watch(models.Model):
+    WATCH_TYPE_CHOICES = (
+        ("mx-exists", "mx-exists"),
+        ("http200", "http200"),
+    )
+    watch_type = models.CharField(
+        max_length=255, db_index=True, choices=WATCH_TYPE_CHOICES
+    )
+    criteria = models.CharField(max_length=255)
+    config = models.JSONField(blank=True, null=True)
+    client = models.ForeignKey(Client, on_delete=models.CASCADE)
+    last_updated = models.DateTimeField(
+        blank=True, null=True, default=timezone.now() - timedelta(days=365)
+    )
+    last_ran = models.DateTimeField(
+        blank=True, null=True, default=timezone.now() - timedelta(days=365)
+    )
+    update_interval = models.IntegerField(
+        default=1440, blank=True, null=True, db_index=True
+    )  # in minutes
+    is_active = models.BooleanField(default=True, blank=True, db_index=True)
+    last_completed = models.DateTimeField(
+        blank=True, null=True, default=timezone.now() - timedelta(days=365)
+    )
+    is_approved = models.BooleanField(default=True, blank=True, db_index=True)
+    last_error = models.DateTimeField(
+        blank=True, null=True, default=timezone.now() - timedelta(days=365)
+    )
+    error_message = models.TextField(blank=True, null=True)
+    status = models.CharField(
+        max_length=32, default="unknown", blank=True, null=True, db_index=True
+    )
+
+
+class WatchResult(models.Model):
+    watch = models.ForeignKey(Watch, on_delete=models.CASCADE)
+    hit = models.CharField(max_length=255, db_index=True)
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
+    is_new = models.BooleanField(default=True, blank=True, db_index=True)
+    is_reviewed = models.BooleanField(default=False, blank=True, db_index=True)
+    is_fp = models.BooleanField(default=False, blank=True, db_index=True)

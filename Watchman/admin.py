@@ -10,6 +10,8 @@ from Watchman.models import (
     PingRecord,
     ZoneList,
     ClientUser,
+    Watch,
+    WatchResult,
 )
 
 
@@ -23,3 +25,5 @@ admin.site.register(WebPage)
 admin.site.register(WhoisRecord)
 admin.site.register(PingRecord)
 admin.site.register(ZoneList)
+admin.site.register(Watch)
+admin.site.register(WatchResult)
