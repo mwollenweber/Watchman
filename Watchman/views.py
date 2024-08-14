@@ -110,6 +110,33 @@ def zone_status(request):
 
 @login_required()
 @require_http_methods(["GET"])
+def is_nod(request):
+    # if request.content_type == 'application/json':
+    if 1 == 1:
+        value = request.GET.get("value", None)
+        data = NewDomain.objects.filter(domain__icontains=value).first()
+        if data:
+            return JsonResponse(
+                {
+                    "status": "success",
+                    "found": True,
+                    "is_nod": True,
+                }
+            )
+        else:
+            return JsonResponse(
+                {
+                    "status": "success",
+                    "found": False,
+                    "is_nod": False,
+                }
+            )
+
+    return JsonResponse({"status": "error"})
+
+
+@login_required()
+@require_http_methods(["GET"])
 def search(request):
     required_params = ["value", "type"]
     ret = {
@@ -129,7 +156,8 @@ def search(request):
             data = Domain.objects.filter(domain__icontains=value).all()
             for d in data:
                 results.append(d.to_dict())
-
+        elif search_type == "nod":
+            return is_nod(request)
         elif search_type == "fqdn":
             logger.warn("search type fqdn todo")
 
@@ -199,5 +227,4 @@ def hits(request):
                 )
             ret = {"status": "success", "count": len(ret_list), "hits": ret_list}
             return JsonResponse(ret)
-
     return JsonResponse(status=200)
