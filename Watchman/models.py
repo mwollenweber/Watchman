@@ -204,13 +204,15 @@ class ActorRecord(models.Model):
 
 class Watch(models.Model):
     WATCH_TYPE_CHOICES = (
-        ("mx-exists", "mx-exists"),
+        ("has-mx", "has-mx"),
         ("http200", "http200"),
+        ("resolves", "resolves"),
     )
     watch_type = models.CharField(
         max_length=255, db_index=True, choices=WATCH_TYPE_CHOICES
     )
-    criteria = models.CharField(max_length=255)
+    target = models.CharField(max_length=255, db_index=True)
+    expected = models.CharField(max_length=255)
     config = models.JSONField(blank=True, null=True)
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
     last_updated = models.DateTimeField(

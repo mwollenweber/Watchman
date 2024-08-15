@@ -2,6 +2,8 @@ import re
 import logging
 import glob
 import os
+import dns.resolver
+import socket
 from time import time
 from django.db import IntegrityError
 from django.conf import settings
@@ -13,6 +15,35 @@ from Watchman.models import Domain, NewDomain, Match, Search
 logger = logging.getLogger(__name__)
 
 MAX_ITERATIONS = 11000000000
+
+
+def has_mx(domain):
+    try:
+        ans = dns.resolver.resolve(domain, "MX")
+        logger.info(f"mx found! for {domain}")
+        return True
+    except dns.resolver.NXDOMAIN:
+        logger.warn("mx not found")
+    return False
+
+
+def has_ip(fqdn):
+    try:
+        ans = dns.resolver.resolve(fqdn)
+        return True
+    except dns.resolver.NXDOMAIN as e:
+        logger.error(e)
+    return False
+
+
+def get_ip_list(fqdn):
+    try:
+        ans = dns.resolver.resolve(fqdn)
+        return ans.rrset
+    except dns.resolver.NXDOMAIN as e:
+        logger.error(e)
+
+    return None
 
 
 def clean_temp():
