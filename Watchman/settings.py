@@ -31,6 +31,9 @@ MIN_UPDATE_INTERVAL = os.getenv("MIN_UPDATE_INTERVAL") or 600.0
 MATCH_UPDATE_INTERVAL = os.getenv("MATCH_UPDATE_INTERVAL") or 600.0
 MAX_NEW_AGE = os.getenv("MAX_NEW_AGE") or 90  # days
 MAX_TEMP_AGE = os.getenv("MAX_TEMP_AGE") or 14  # days
+SLACK_CHANNEL = os.getenv("SLACK_CHANNEL") or warn("No Slack Channel set")
+SLACK_API_TOKEN = os.getenv("SLACK_API_TOKEN") or warn("No Slack API Token set")
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
