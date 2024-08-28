@@ -207,17 +207,7 @@ def load_diff(domain_list):
 
 def getZonefiles(zone):
     logger.info("Getting zone files for %s", zone)
-    files = glob.glob(f"{settings.TEMP_DIR}/*-{zone}.txt")
-    modified_files = list()
-    current_time = time()
-
-    for zonefile in files:
-        # fixme - some logic around only diffing the two latest files would be better
-        # only looking for recent files is problematic when dev is old/stale
-        # time_delta = current_time - os.path.getmtime(zonefile)
-        # time_delta_days = time_delta / (60 * 60 * 24)
-        modified_files.append(zonefile)
-
+    modified_files = glob.glob(f"{settings.TEMP_DIR}/*-{zone}.txt")
     modified_files.sort(key=lambda x: os.path.getmtime(x))
     logger.info(f"DIFFING: {modified_files[-2]} {modified_files[-1]}")
     return modified_files[-2], modified_files[-1]
