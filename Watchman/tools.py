@@ -219,8 +219,8 @@ def getZonefiles(zone):
         modified_files.append(zonefile)
 
     modified_files.sort(key=lambda x: os.path.getmtime(x))
-    logger.info(f"DIFFING: {modified_files[0]} {modified_files[-1]}")
-    return modified_files[0], modified_files[-1]
+    logger.info(f"DIFFING: {modified_files[-2]} {modified_files[-1]}")
+    return modified_files[-2], modified_files[-1]
 
 
 def diff_lists(oldlist, newlist):
