@@ -33,7 +33,7 @@ MAX_NEW_AGE = os.getenv("MAX_NEW_AGE") or 90  # days
 MAX_TEMP_AGE = os.getenv("MAX_TEMP_AGE") or 14  # days
 SLACK_CHANNEL = os.getenv("SLACK_CHANNEL") or warn("No Slack Channel set")
 SLACK_API_TOKEN = os.getenv("SLACK_API_TOKEN") or warn("No Slack API Token set")
-
+MAINTAIN_FULL_ZONEFILES = os.getenv("MAINTAIN_FULL_ZONEFILES") or False
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent

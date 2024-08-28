@@ -11,6 +11,8 @@ client = WebClient(token=settings.SLACK_TOKEN)
 def test(message=""):
     try:
         logger.info("Testing slack")
-        response = client.chat_postMessage(channel=settings.SLACK_CHANNEL, text=f"{message}")
+        response = client.chat_postMessage(
+            channel=settings.SLACK_CHANNEL, text=f"{message}"
+        )
     except SlackApiError as e:
         print(f"{e}")

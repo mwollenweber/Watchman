@@ -16,8 +16,7 @@ Watchman is a security operations tool that watches domains and fqdns
 9. python manage.py migrate
 10. python manage.py init_zones
 11. python manage.py firstload_zonefile <zone> #repeat for zones you want to watch
-12. python manage.py enable_zone <zone>
-
+12. python manage.py enable_zone com net org security tech technology gov
 
 
 
@@ -25,8 +24,14 @@ Watchman is a security operations tool that watches domains and fqdns
 1. source env/bin/activate && source config.rc
 2. python manage.py update_zone <zonename>
 
-
+## Create Searches
+1. Browse to http://localhost:8000/admin/Watchman/search/
+2. Add relevant clients and searches
+ 
 ## Manually Run Searches (Stored in DB):
 1. source env/bin/activate && source config.rc
 2. python manage.py run_searches 
+
+## See Search Results
+1. Browse to http://localhost:8000/hits/
 
