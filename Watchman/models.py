@@ -245,3 +245,14 @@ class WatchResult(models.Model):
     is_new = models.BooleanField(default=True, blank=True, db_index=True)
     is_reviewed = models.BooleanField(default=False, blank=True, db_index=True)
     is_fp = models.BooleanField(default=False, blank=True, db_index=True)
+
+
+class SlackConfig(models.Model):
+    id = models.AutoField(primary_key=True)
+    client = models.ForeignKey(Client, on_delete=models.CASCADE)
+    channel_name = models.CharField(max_length=255, db_index=True)
+    channel = models.CharField(max_length=255, db_index=True)
+    api_key = models.CharField(max_length=255)
+    created = models.DateTimeField(auto_now_add=True)
+    last_updated = models.DateTimeField(auto_now=True)
+    enabled = models.BooleanField(default=True, db_index=True)
