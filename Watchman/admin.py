@@ -12,7 +12,6 @@ from Watchman.models import (
     ClientUser,
     Watch,
     WatchResult,
-    SlackConfig,
     ClientAlert,
 )
 
@@ -29,5 +28,4 @@ admin.site.register(PingRecord)
 admin.site.register(ZoneList)
 admin.site.register(Watch)
 admin.site.register(WatchResult)
-admin.site.register(SlackConfig)
 admin.site.register(ClientAlert)
