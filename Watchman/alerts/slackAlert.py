@@ -1,5 +1,4 @@
 import logging
-from django.conf import settings
 from slack import WebClient
 from slack.errors import SlackApiError
 
