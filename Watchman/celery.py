@@ -22,6 +22,10 @@ app.conf.beat_schedule = {
         "task": "run_matches",
         "schedule": settings.MATCH_UPDATE_INTERVAL,
     },
+    "run_alerts": {
+        "task": "run_alerts",
+        "schedule": settings.MATCH_UPDATE_INTERVAL,
+    },
     "expire_new": {
         "task": "expire_new",
         "schedule": 3600,
@@ -30,6 +34,5 @@ app.conf.beat_schedule = {
         "task": "clean_tmp",
         "schedule": 3600,
     },
-    # clean matches
-    # run Watch
+
 }

@@ -160,8 +160,8 @@ class MXRecord(models.Model):
 class ClientAlert(models.Model):
     ALERT_TYPE_CHOICES = (
         ("slack", "slack"),
-        ("email", "email"),
-        ("s3", "s3"),
+        # ("email", "email"),
+        # ("s3", "s3"),
     )
     alert_type = models.CharField(
         max_length=255, db_index=True, choices=ALERT_TYPE_CHOICES

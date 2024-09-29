@@ -12,5 +12,6 @@ urlpatterns = [
     path("search/", views.search),
     path("isnod/", views.is_nod),
     path("newdomains/", views.new_domains),
+
     path("admin/", admin.site.urls),
 ]

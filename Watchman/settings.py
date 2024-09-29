@@ -3,6 +3,8 @@ from warnings import warn
 from pathlib import Path
 from logging.config import dictConfig
 
+BASE_URL = 'http://localhost:8000'
+
 # Celery settings
 CELERY_BROKER_URL = "redis://localhost:6379/0"
 
