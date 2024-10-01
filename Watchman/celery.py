@@ -34,5 +34,4 @@ app.conf.beat_schedule = {
         "task": "clean_tmp",
         "schedule": 3600,
     },
-
 }

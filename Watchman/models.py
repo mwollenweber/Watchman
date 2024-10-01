@@ -245,4 +245,3 @@ class WatchResult(models.Model):
     is_new = models.BooleanField(default=True, blank=True, db_index=True)
     is_reviewed = models.BooleanField(default=False, blank=True, db_index=True)
     is_fp = models.BooleanField(default=False, blank=True, db_index=True)
-

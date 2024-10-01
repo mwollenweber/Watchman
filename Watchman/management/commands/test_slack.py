@@ -9,8 +9,10 @@ logger = logging.getLogger(__name__)
 class Command(BaseCommand):
     def handle(self, **options):
         logger.info("Testing Slack Message")
-        alert_list = ClientAlert.objects.filter(alert_type="slack").filter(enabled=True).all()
+        alert_list = (
+            ClientAlert.objects.filter(alert_type="slack").filter(enabled=True).all()
+        )
         for alert in alert_list:
             config = alert.config
             logger.info("Testing Slack alert %s", alert.id)
-            sendSlackMessage(config['apikey'], config['channel'], "***TEST ALERT***")
+            sendSlackMessage(config["apikey"], config["channel"], "***TEST ALERT***")

@@ -233,6 +233,6 @@ def hits(request):
 @require_http_methods(["GET"])
 @login_required()
 def view_alerts(request):
-    #request.user
-    #alert_id
+    # request.user
+    # alert_id
     return JsonResponse(status=200)

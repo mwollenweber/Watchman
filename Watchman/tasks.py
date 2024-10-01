@@ -112,10 +112,10 @@ def update_zones():
     for zone in healthy_zones:
         try:
             if zone.last_completed < timezone.now() - timedelta(
-                    seconds=zone.update_interval
+                seconds=zone.update_interval
             ):
                 if zone.last_updated < timezone.now() - timedelta(
-                        seconds=settings.MIN_ZONE_TIME
+                    seconds=settings.MIN_ZONE_TIME
                 ):
                     logger.info(f"Enqueing {zone.name}")
                     update_zone.apply_async(args=[zone])
