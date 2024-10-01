@@ -23,8 +23,9 @@ app.conf.beat_schedule = {
         "schedule": settings.MATCH_UPDATE_INTERVAL,
     },
     "run_alerts": {
-        "task": "run_alerts",
-        "schedule": settings.MATCH_UPDATE_INTERVAL,
+        "task": "run_alerts_task",
+        # "schedule": settings.MATCH_UPDATE_INTERVAL,
+        "schedule": 120,
     },
     "expire_new": {
         "task": "expire_new",

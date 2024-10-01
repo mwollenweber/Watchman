@@ -336,5 +336,4 @@ def run_alerts():
 
         if not has_error:
             m.has_alerted = True
-            # fixme
             m.save()
