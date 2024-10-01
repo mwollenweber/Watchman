@@ -160,8 +160,8 @@ class MXRecord(models.Model):
 class ClientAlert(models.Model):
     ALERT_TYPE_CHOICES = (
         ("slack", "slack"),
-        ("email", "email"),
-        ("s3", "s3"),
+        # ("email", "email"),
+        # ("s3", "s3"),
     )
     alert_type = models.CharField(
         max_length=255, db_index=True, choices=ALERT_TYPE_CHOICES
@@ -171,8 +171,8 @@ class ClientAlert(models.Model):
     last_updated = models.DateTimeField(auto_now=True)
     last_run = models.DateTimeField(auto_now_add=True, blank=True)
     last_completed = models.DateTimeField(auto_now_add=True, blank=True)
-    is_active = models.BooleanField(default=True, db_index=True)
-    config = models.JSONField(blank=True, null=True)
+    enabled = models.BooleanField(default=True, db_index=True)
+    config = models.JSONField()
 
 
 class WebPage(models.Model):

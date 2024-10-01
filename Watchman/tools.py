@@ -9,8 +9,10 @@ from django.db import IntegrityError
 from django.conf import settings
 from Levenshtein import distance
 from django.utils import timezone
-from datetime import timedelta
-from Watchman.models import Domain, NewDomain, Match, Search
+from datetime import timedelta, datetime
+from Watchman.models import Domain, NewDomain, Match, Search, ClientAlert
+from Watchman.alerts.slackAlert import sendSlackMessage
+from Watchman.settings import BASE_URL
 
 logger = logging.getLogger(__name__)
 
@@ -312,3 +314,26 @@ class MatchEditDistance(MatchMethod):
                 hit_list.append(target)
 
         return hit_list
+
+
+def run_alerts():
+    for m in Match.objects.filter(has_alerted=False).filter(is_fp=False).all():
+        has_error = False
+        alerts = ClientAlert.objects.filter(client=m.client).filter(enabled=True).all()
+        for a in alerts:
+            now = datetime.utcnow().isoformat()
+            if a.alert_type == "slack":
+                config = a.config
+                message = f"[WATCHMAN ALERT] {now} : Match Detected on {m.hit} for more information {BASE_URL}/alert/?id={a.id}"
+                sendSlackMessage(config["apikey"], config["channel"], message)
+            elif a.alert_type == "email":
+                logger.info("fixme: alert type = email")
+            elif a.alert_type == "s3":
+                logger.info("fixme: alert type = s3")
+            else:
+                logger.error("Unhandled alert type: {a.alert_type}")
+                has_error = True
+
+        if not has_error:
+            m.has_alerted = True
+            m.save()

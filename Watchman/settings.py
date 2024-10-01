@@ -3,6 +3,8 @@ from warnings import warn
 from pathlib import Path
 from logging.config import dictConfig
 
+BASE_URL = "http://localhost:8000"
+
 # Celery settings
 CELERY_BROKER_URL = "redis://localhost:6379/0"
 
@@ -29,10 +31,8 @@ MIN_ZONE_TIME = os.getenv("MIN_ZONE_TIME") or 14400  # seconds
 ZONE_UPDATE_INTERVAL = os.getenv("ZONE_UPDATE_INTERVAL") or 600.0  # seconds
 MIN_UPDATE_INTERVAL = os.getenv("MIN_UPDATE_INTERVAL") or 600.0
 MATCH_UPDATE_INTERVAL = os.getenv("MATCH_UPDATE_INTERVAL") or 600.0
-MAX_NEW_AGE = os.getenv("MAX_NEW_AGE") or 90  # days
-MAX_TEMP_AGE = os.getenv("MAX_TEMP_AGE") or 14  # days
-SLACK_CHANNEL = os.getenv("SLACK_CHANNEL") or warn("No Slack Channel set")
-SLACK_API_TOKEN = os.getenv("SLACK_API_TOKEN") or warn("No Slack API Token set")
+MAX_NEW_AGE = os.getenv("MAX_NEW_AGE") or 400  # days
+MAX_TEMP_AGE = os.getenv("MAX_TEMP_AGE") or 31  # days
 MAINTAIN_FULL_ZONEFILES = os.getenv("MAINTAIN_FULL_ZONEFILES") or False
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.

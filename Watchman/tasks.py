@@ -11,6 +11,7 @@ from Watchman.tools import (
     run_searches,
     expire_new,
     clean_temp,
+    run_alerts,
 )
 from .celery import app
 
@@ -126,3 +127,9 @@ def update_zones():
             zone.error_message = f"{e}"
             zone.status = "error"
             zone.save()
+
+
+@app.task(name="run_alerts_task")
+def run_alerts_task():
+    logger.info("Running Alerts")
+    run_alerts()
