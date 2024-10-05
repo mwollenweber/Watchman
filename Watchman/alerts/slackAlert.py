@@ -5,13 +5,12 @@ from slack.errors import SlackApiError
 logger = logging.getLogger(__name__)
 
 
-def sendSlackMessage(apitoken: str, channel: str, message: str) -> bool:
+def sendSlackMessage(apitoken: str, channel: str, message: str) -> None:
     try:
-        logger.info("Testing slack")
+        logger.debug(f"Sending Slack message: {message}")
         client = WebClient(apitoken)
         response = client.chat_postMessage(channel=channel, text=f"{message}")
+        logger.debug(f"Response: {response}")
     except SlackApiError as e:
-        print(f"{e}")
-        return False
-
-    return True
+        print(f"{e} {response}")
+        return

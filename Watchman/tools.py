@@ -12,6 +12,7 @@ from django.utils import timezone
 from datetime import timedelta, datetime
 from Watchman.models import Domain, NewDomain, Match, Search, ClientAlert
 from Watchman.alerts.slackAlert import sendSlackMessage
+from Watchman.alerts.email import send_email
 from Watchman.settings import BASE_URL
 
 logger = logging.getLogger(__name__)
@@ -322,12 +323,17 @@ def run_alerts():
         alerts = ClientAlert.objects.filter(client=m.client).filter(enabled=True).all()
         for a in alerts:
             now = datetime.utcnow().isoformat()
+            config = a.config
+            message = f"[WATCHMAN ALERT] {now} : Match Detected on {m.hit} for more information {BASE_URL}/alert/?id={a.id}"
             if a.alert_type == "slack":
-                config = a.config
-                message = f"[WATCHMAN ALERT] {now} : Match Detected on {m.hit} for more information {BASE_URL}/alert/?id={a.id}"
+                logger.info("alert type = slack")
                 sendSlackMessage(config["apikey"], config["channel"], message)
+            elif a.alert_type == "gmail":
+                logger.info("fixme: alert type = gmail")
             elif a.alert_type == "email":
-                logger.info("fixme: alert type = email")
+                logger.info("alert type = email")
+                config = a.config
+                send_email(config, message)
             elif a.alert_type == "s3":
                 logger.info("fixme: alert type = s3")
             else:
