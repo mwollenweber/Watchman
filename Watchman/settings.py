@@ -8,6 +8,7 @@ BASE_URL = "http://localhost:8000"
 # Celery settings
 CELERY_BROKER_URL = "redis://localhost:6379/0"
 
+DEBUG = os.getenv("DEBUG") or True
 DBNAME = os.getenv("DBNAME") or warn(
     "No Database Name set in environment variable DBNAME"
 )
@@ -52,8 +53,6 @@ AUTH_USER_MODEL = "accounts.CustomUser"
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-s9n)tio7xscb%r4s_1v^rptbj*bb@ycm18(_@=%#mla#u#tut2"
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
 ALLOWED_HOSTS = [
     ".herokuapp.com",
