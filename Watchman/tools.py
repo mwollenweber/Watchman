@@ -13,7 +13,7 @@ from datetime import timedelta, datetime
 from Watchman.models import Domain, NewDomain, Match, Search, ClientAlert
 from Watchman.alerts.slackAlert import sendSlackMessage
 from Watchman.alerts.email import send_email
-from Watchman.settings import BASE_URL
+from Watchman.settings import BASE_URL, DEBUG
 
 logger = logging.getLogger(__name__)
 
@@ -50,10 +50,8 @@ def get_ip_list(fqdn):
 
 
 def clean_temp():
-    files = glob.glob(f"{settings.TEMP_DIR}/*txt")
     current_time = time()
-
-    for f in files:
+    for f in glob.glob(f"{settings.TEMP_DIR}/*txt"):
         time_delta_days = (current_time - os.path.getmtime(f)) / (60 * 60 * 24)
         if time_delta_days > settings.MAX_TEMP_AGE:
             logger.info(f"deleting: {f}")
@@ -212,6 +210,9 @@ def getZonefiles(zone):
     logger.info("Getting zone files for %s", zone)
     modified_files = glob.glob(f"{settings.TEMP_DIR}/*-{zone}.txt")
     modified_files.sort(key=lambda x: os.path.getmtime(x))
+    if DEBUG:
+        logger.info(f"DEBUG DIFFING: {modified_files[0]} {modified_files[-1]}")
+        return modified_files[0], modified_files[-1]
     logger.info(f"DIFFING: {modified_files[-2]} {modified_files[-1]}")
     return modified_files[-2], modified_files[-1]
 
