@@ -197,36 +197,36 @@ def new_domains(request):
 
 @login_required()
 def hits(request):
+    event_id = request.GET.get("event_id", None)
     if request.user.is_superuser:
-        hit_list = Match.objects.all()
+        if event_id:
+            hit_list = Match.objects.filter(id=event_id)
+        else:
+            hit_list = Match.objects.all()
     else:
         myuser = ClientUser.objects.filter(user=request.user).first()
-        hit_list = Match.objects.filter(client=myuser.client).all()
-        if not myuser:
-            return JsonResponse(
+        if event_id:
+            hit_list = Match.objects.filter(id=event_id)
+        else:
+            hit_list = Match.objects.filter(client=myuser.client).all()
+
+    #if request.content_type == 'application/json':
+    if 1 == 1:
+        ret_list = []
+        for hit in hit_list:
+            ret_list.append(
                 {
-                    "status": "error",
+                    "name": hit.hit,
+                    "created": hit.created,
+                    "modified": hit.last_modified,
+                    "is_new": hit.is_new,
+                    "is_reviewed": hit.is_reviewed,
+                    "is_fp": hit.is_fp,
+                    "client": hit.client.name,
                 }
             )
-
-    if request.method == "GET":
-        # if request.content_type == 'application/json':
-        if 1 == 1:
-            ret_list = []
-            for hit in hit_list:
-                ret_list.append(
-                    {
-                        "name": hit.hit,
-                        "created": hit.created,
-                        "modified": hit.last_modified,
-                        "is_new": hit.is_new,
-                        "is_reviewed": hit.is_reviewed,
-                        "is_fp": hit.is_fp,
-                        "client": hit.client.name,
-                    }
-                )
-            ret = {"status": "success", "count": len(ret_list), "hits": ret_list}
-            return JsonResponse(ret)
+        ret = {"status": "success", "count": len(ret_list), "hits": ret_list}
+        return JsonResponse(ret)
     return JsonResponse(status=200)
 
 
