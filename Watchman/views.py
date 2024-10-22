@@ -22,8 +22,10 @@ logger = logging.getLogger(__name__)
 
 def current_datetime(request):
     now = datetime.utcnow()
-    html = "<html><body>It is now %s.</body></html>" % now
-    return HttpResponse(html)
+    return JsonResponse({
+        "status": "ok",
+        "now": f"{now.isoformat()}"
+    })
 
 
 @require_http_methods(["GET"])
@@ -81,58 +83,46 @@ def login(request):
 @permission_required("is_superuser")
 def zone_status(request):
     zone_list = ZoneList.objects.filter(enabled=True).all()
-    if request.method == "GET":
-        # if request.content_type == 'application/json':
-        if 1 == 1:
-            ret_list = []
-            for zone in zone_list:
-                ret_list.append(
-                    {
-                        "name": zone.name,
-                        "status": zone.status,
-                        "enabled": zone.enabled,
-                        "update_interval": zone.update_interval,
-                        "last_updated": zone.last_updated,
-                        "last_completed": zone.last_completed,
-                        "last_diffed": zone.last_diffed,
-                        "last_error": zone.last_error,
-                        # 'error_message': zone.error_messsage,
-                    }
-                )
-            ret = {"status": "success", "count": len(ret_list), "zones": ret_list}
-            return JsonResponse(ret)
-        else:
-            return HttpResponse(status=200)
-
-    elif request.method == "POST":
-        return HttpResponse("")
+    ret_list = []
+    for zone in zone_list:
+        ret_list.append(
+            {
+                "name": zone.name,
+                "status": zone.status,
+                "enabled": zone.enabled,
+                "update_interval": zone.update_interval,
+                "last_updated": zone.last_updated,
+                "last_completed": zone.last_completed,
+                "last_diffed": zone.last_diffed,
+                "last_error": zone.last_error,
+                # 'error_message': zone.error_messsage,
+            }
+        )
+    ret = {"status": "success", "count": len(ret_list), "zones": ret_list}
+    return JsonResponse(ret)
 
 
 @login_required()
 @require_http_methods(["GET"])
 def is_nod(request):
-    # if request.content_type == 'application/json':
-    if 1 == 1:
-        value = request.GET.get("value", None)
-        data = NewDomain.objects.filter(domain__icontains=value).first()
-        if data:
-            return JsonResponse(
-                {
-                    "status": "success",
-                    "found": True,
-                    "is_nod": True,
-                }
-            )
-        else:
-            return JsonResponse(
-                {
-                    "status": "success",
-                    "found": False,
-                    "is_nod": False,
-                }
-            )
-
-    return JsonResponse({"status": "error"})
+    value = request.GET.get("value", "example.com")
+    data = NewDomain.objects.filter(domain__icontains=value).first()
+    if data:
+        return JsonResponse(
+            {
+                "status": "success",
+                "found": True,
+                "is_nod": True,
+            }
+        )
+    else:
+        return JsonResponse(
+            {
+                "status": "success",
+                "found": False,
+                "is_nod": False,
+            }
+        )
 
 
 @login_required()
@@ -142,35 +132,32 @@ def search(request):
     ret = {
         "status": "error",
     }
-    # if request.content_type == 'application/json':
-    if 1 == 1:
-        value = request.GET.get("value", None)
-        search_type = request.GET.get("search_type", None)
-        results = []
 
-        if search_type == "new_domain":
-            data = NewDomain.objects.filter(domain__icontains=value).all()
-            for d in data:
-                results.append(d.to_dict())
-        elif search_type == "domain":
-            data = Domain.objects.filter(domain__icontains=value).all()
-            for d in data:
-                results.append(d.to_dict())
-        elif search_type == "nod":
-            return is_nod(request)
-        elif search_type == "fqdn":
-            logger.warn("search type fqdn todo")
+    value = request.GET.get("value", None)
+    search_type = request.GET.get("search_type", None)
+    results = []
 
-        return JsonResponse(
-            {
-                "status": "success",
-                "search_type": search_type,
-                "results": results,
-                "count": len(results),
-            }
-        )
+    if search_type == "new_domain":
+        data = NewDomain.objects.filter(domain__icontains=value).all()
+        for d in data:
+            results.append(d.to_dict())
+    elif search_type == "domain":
+        data = Domain.objects.filter(domain__icontains=value).all()
+        for d in data:
+            results.append(d.to_dict())
+    elif search_type == "nod":
+        return is_nod(request)
+    elif search_type == "fqdn":
+        logger.warn("search type fqdn todo")
 
-    return JsonResponse(ret)
+    return JsonResponse(
+        {
+            "status": "success",
+            "search_type": search_type,
+            "results": results,
+            "count": len(results),
+        }
+    )
 
 
 @require_http_methods(["GET"])
@@ -185,49 +172,46 @@ def new_domains(request):
             }
         )
 
-    # if request.content_type == 'application/json':
-    if 1 == 1:
-        ret = {
-            "status": "success",
-            "count": len(results),
-            "results": results,
-        }
-        return JsonResponse(ret)
+    ret = {
+        "status": "success",
+        "count": len(results),
+        "results": results,
+    }
+    return JsonResponse(ret)
 
 
+@require_http_methods(["GET"])
 @login_required()
 def hits(request):
+    event_id = request.GET.get("id", None)
     if request.user.is_superuser:
-        hit_list = Match.objects.all()
+        if event_id:
+            hit_list = Match.objects.filter(id=event_id)
+        else:
+            hit_list = Match.objects.all()
     else:
         myuser = ClientUser.objects.filter(user=request.user).first()
-        hit_list = Match.objects.filter(client=myuser.client).all()
-        if not myuser:
-            return JsonResponse(
-                {
-                    "status": "error",
-                }
-            )
+        if event_id:
+            hit_list = Match.objects.filter(id=event_id, client=myuser.client).all()
+        else:
+            hit_list = Match.objects.filter(client=myuser.client).all()
 
-    if request.method == "GET":
-        # if request.content_type == 'application/json':
-        if 1 == 1:
-            ret_list = []
-            for hit in hit_list:
-                ret_list.append(
-                    {
-                        "name": hit.hit,
-                        "created": hit.created,
-                        "modified": hit.last_modified,
-                        "is_new": hit.is_new,
-                        "is_reviewed": hit.is_reviewed,
-                        "is_fp": hit.is_fp,
-                        "client": hit.client.name,
-                    }
-                )
-            ret = {"status": "success", "count": len(ret_list), "hits": ret_list}
-            return JsonResponse(ret)
-    return JsonResponse(status=200)
+    ret_list = []
+    for hit in hit_list:
+        ret_list.append(
+            {
+                "name": hit.hit,
+                "id": hit.id,
+                "created": hit.created,
+                "modified": hit.last_modified,
+                "is_new": hit.is_new,
+                "is_reviewed": hit.is_reviewed,
+                "is_fp": hit.is_fp,
+                "client": hit.client.name,
+            }
+        )
+    ret = {"status": "success", "count": len(ret_list), "hits": ret_list}
+    return JsonResponse(ret)
 
 
 @require_http_methods(["GET"])
