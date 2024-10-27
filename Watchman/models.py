@@ -48,7 +48,7 @@ class NewDomain(models.Model):
     created = models.DateTimeField(auto_now_add=True, blank=True)
     is_processed = models.BooleanField(default=False, blank=True, db_index=True)
     is_expired = models.BooleanField(default=False, db_index=True)
-    meh = models.DateTimeField(auto_now_add=True, blank=True)
+    is_ignored = models.BooleanField(default=False, db_index=True)
     list_display = ["domain", "tld"]
 
     def to_dict(self):
@@ -160,6 +160,7 @@ class MXRecord(models.Model):
 class ClientAlert(models.Model):
     ALERT_TYPE_CHOICES = (
         ("slack", "slack"),
+        ("slackWebhook", "slackWebhook"),
         ("email", "email"),
         ("gmail", "gmail"),
         # ("s3", "s3"),

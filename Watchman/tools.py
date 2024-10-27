@@ -314,7 +314,6 @@ class MatchEditDistance(MatchMethod):
         for target in target_list:
             if distance(target, self.criteria) < self.tolerance:
                 hit_list.append(target)
-
         return hit_list
 
 
@@ -329,6 +328,9 @@ def run_alerts():
             if a.alert_type == "slack":
                 logger.info("alert type = slack")
                 sendSlackMessage(config["apikey"], config["channel"], message)
+            elif a.alert_type == "slackWebhook":
+                logger.info("TODO")
+
             elif a.alert_type == "gmail":
                 logger.info("fixme: alert type = gmail")
             elif a.alert_type == "email":
