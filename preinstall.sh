@@ -25,8 +25,8 @@ else
     service postgresql start
     service redis start
     sudo -u postgres createdb watchman
-    sudo -u posgres createuser watchman
-    sudo -u posgres psql -c "GRANT ALL PRIVILEGES ON DATABASE 'watchman' to watchman;"
+    sudo -u postgres createuser -W watchman
+    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE watchman to watchman;"
 fi
 
 echo "DONE"
