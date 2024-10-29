@@ -31,4 +31,11 @@ sudo -u postgres createdb watchman
 sudo -u postgres psql -c "CREATE USER $DBUSER WITH ENCRYPTED PASSWORD '$DBPASSWORD';"
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE watchman to $DBUSER;"
 
+virtualenv env
+source env/bin/activate
+pip install -r requirements
+python manage.py makemigrations
+python manage.py migrate
+
+
 echo "DONE"
