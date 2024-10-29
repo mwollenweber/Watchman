@@ -15,7 +15,7 @@ Watchman is a security tool that watches domains and fqdns
 9. python manage.py makemigrations
 9. python manage.py migrate
 10. python manage.py init_zones
-11. python manage.py enable_zone technology tech net org security gov info online email biz com blog
+11. python manage.py enable_zone app bbc biz blog careers cheap data docs email eus gov inc info jobs java kosher law llc link lol mov net new one online org page pay  pics pro run security sucks team tech technology tel top xyz vip zip com
 
 
 
