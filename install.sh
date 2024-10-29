@@ -27,15 +27,20 @@ else
 fi
 
 source $script_directory/config.rc
-sudo -u postgres createdb watchman
+sudo -u postgres createdb $DBNAME
 sudo -u postgres psql -c "CREATE USER $DBUSER WITH ENCRYPTED PASSWORD '$DBPASSWORD';"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE watchman to $DBUSER;"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DBNAME to $DBUSER;"
+sudo -u postgres psql -c "ALTER DATABASE $DBNAME OWNER TO $DBUSER;"
 
+mkdir $script_directory/tmp
 virtualenv env
 source env/bin/activate
 pip install -r requirements
 python manage.py makemigrations
 python manage.py migrate
+python manage.py init_zones
+python manage.py enable_zones tech technology security gov
+mkdir $script_directory/tmp
 
 
-echo "DONE"
+echo "DONE. Please createsuperuser and runserver"
