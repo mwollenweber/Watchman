@@ -17,16 +17,18 @@ if [[ `uname` == "Darwin" ]]; then
     brew install redis
     brew services start redis
 
-    createuser watchman
-    createdb watchman
 else
+    script_directory=$(dirname $(readlink -f $BASH_SOURCE))
+
     apt-get update
     apt-get install screen git gh python3 virtualenv postgresql-all redis
     service postgresql start
     service redis start
-    sudo -u postgres createdb watchman
-    sudo -u postgres psql -c "CREATE USER watchman WITH ENCRYPTED PASSWORD 'watchman';"
-    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE watchman to watchman;"
 fi
+
+source $script_directory/config.rc
+sudo -u postgres createdb watchman
+sudo -u postgres psql -c "CREATE USER $DBUSER WITH ENCRYPTED PASSWORD '$DBPASSWORD';"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE watchman to $DBUSER;"
 
 echo "DONE"
