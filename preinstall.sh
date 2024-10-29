@@ -25,7 +25,7 @@ else
     service postgresql start
     service redis start
     sudo -u postgres createdb watchman
-    sudo -u postgres createuser -W watchman
+    sudo -u postgres psql -c "CREATE USER watchman WITH ENCRYPTED PASSWORD 'watchman';"
     sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE watchman to watchman;"
 fi
 
