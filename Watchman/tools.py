@@ -11,7 +11,7 @@ from Levenshtein import distance
 from django.utils import timezone
 from datetime import timedelta, datetime
 from Watchman.models import Domain, NewDomain, Match, Search, ClientAlert
-from Watchman.alerts.slackAlert import sendSlackMessage
+from Watchman.alerts.slackAlert import sendSlackMessage, sendSlackWebhook
 from Watchman.alerts.email import send_email
 from Watchman.settings import BASE_URL, DEBUG
 
@@ -314,7 +314,6 @@ class MatchEditDistance(MatchMethod):
         for target in target_list:
             if distance(target, self.criteria) < self.tolerance:
                 hit_list.append(target)
-
         return hit_list
 
 
@@ -325,10 +324,14 @@ def run_alerts():
         for a in alerts:
             now = datetime.utcnow().isoformat()
             config = a.config
-            message = f"[WATCHMAN ALERT] {now} : Match Detected on {m.hit} for more information {BASE_URL}/alert/?id={a.id}"
+            message = f"[WATCHMAN ALERT] {now} : Match Detected on {m.hit} for more information {BASE_URL}/api/hits/?id={a.id}"
             if a.alert_type == "slack":
-                logger.info("alert type = slack")
+                logger.info("alert type = slackmsg")
                 sendSlackMessage(config["apikey"], config["channel"], message)
+            elif a.alert_type == "slackWebhook":
+                logger.info("slackwebhook")
+                webhook = config["webhook"]
+                sendSlackWebhook(webhook, message)
             elif a.alert_type == "gmail":
                 logger.info("fixme: alert type = gmail")
             elif a.alert_type == "email":

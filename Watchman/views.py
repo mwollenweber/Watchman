@@ -22,10 +22,7 @@ logger = logging.getLogger(__name__)
 
 def current_datetime(request):
     now = datetime.utcnow()
-    return JsonResponse({
-        "status": "ok",
-        "now": f"{now.isoformat()}"
-    })
+    return JsonResponse({"status": "ok", "now": f"{now.isoformat()}"})
 
 
 @require_http_methods(["GET"])

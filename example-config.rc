@@ -1,6 +1,6 @@
 export DBNAME='watchman'
-export DBUSER='postgres'
-export DBPASSWORD=''
+export DBUSER='watchman'
+export DBPASSWORD='watchman'
 export DBHOST='localhost'
 export ICANN_USERNAME='username@example.com'
 export ICANN_PASSWORD='Abcdef#12345678'
