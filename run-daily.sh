@@ -18,6 +18,7 @@ else
 fi
 
 
-python manage.py update_zone  app bbc biz blog careers cheap data docs email eus gov inc info jobs java kosher law llc link lol mov net new one online org page pay  pics pro run security sucks team tech technology tel top xyz vip zip com
+python manage.py update_zone `echo $ENABLED_ZONES`
 python manage.py run_searches
 python manage.py run_alerts
+find ./tmp/*.txt  -mtime +30d  -type f  -exec rm {} \;
