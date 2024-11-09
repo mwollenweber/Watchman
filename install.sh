@@ -39,8 +39,6 @@ pip install -r requirements
 python manage.py makemigrations
 python manage.py migrate
 python manage.py init_zones
-python manage.py enable_zones tech technology security gov
-mkdir $script_directory/tmp
+python manage.py enable_zone `echo $ENABLED_ZONES`
+python manage.py createsuperuser
 
-
-echo "DONE. Please createsuperuser and runserver"

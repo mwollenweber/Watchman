@@ -4,4 +4,6 @@ export DBPASSWORD='watchman'
 export DBHOST='localhost'
 export ICANN_USERNAME='username@example.com'
 export ICANN_PASSWORD='Abcdef#12345678'
-export MAX_WORKERS=4
+export MAX_WORKERS=2
+export ENABLED_ZONES="app bbc biz blog careers cheap data docs email eus gov inc info jobs java kosher law llc link lol mov net new one online org page pay  pics pro run security sucks team tech technology tel top xyz vip zip com"
+
