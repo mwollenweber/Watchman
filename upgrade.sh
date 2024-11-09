@@ -18,5 +18,5 @@ else
 fi
 
 git pull
-python manage.py makemigrations
+python manage.py makemigrations --merge
 python manage.py migrate
