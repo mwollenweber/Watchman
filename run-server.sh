@@ -17,4 +17,5 @@ else
 	echo "WARN: $script_directory/config.rc does not exist."
 fi
 
+source $script_directory/env/bin/activate
 python manage.py runserver
