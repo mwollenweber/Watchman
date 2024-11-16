@@ -128,7 +128,6 @@ def run_search(method, criteria, target_list, tolerance=None):
 
 def run_searches():
     logging.info("Running Searches")
-
     # run the new domain as target list first
     logger.info("Running newdomain searches")
     target_list = NewDomain.objects.filter(is_expired=False).values_list(
@@ -210,6 +209,13 @@ def getZonefiles(zone):
     logger.info("Getting zone files for %s", zone)
     modified_files = glob.glob(f"{settings.TEMP_DIR}/*-{zone}.txt")
     modified_files.sort(key=lambda x: os.path.getmtime(x))
+    if len(modified_files) == 0:
+        logger.error(f"No zone files for {zone}")
+        return
+    if len(modified_files) < 2:
+        logger.warn(f"Only one zone file for {zone}")
+        return modified_files[0], modified_files[-1]
+    # fixme probably don't need/want this
     if DEBUG:
         logger.info(f"DEBUG DIFFING: {modified_files[0]} {modified_files[-1]}")
         return modified_files[0], modified_files[-1]
@@ -235,7 +241,6 @@ def diff_files(old_file, new_file):
     new_list = []
     old = old_file.readline().strip()
     new = new_file.readline().strip()
-
     while len(old) > 0:
         if old == new:
             old = old_file.readline().strip()
@@ -250,7 +255,6 @@ def diff_files(old_file, new_file):
         if count > MAX_ITERATIONS:
             logging.warn("MAX ITERATIONS HIT. Quitting")
             break
-
         if len(new) < 1:
             break
 
