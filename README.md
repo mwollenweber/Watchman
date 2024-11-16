@@ -9,6 +9,10 @@ Watchman is a security tool that watches domains and fqdns
 4. sudo ./install.sh
 
 
+## Update Specified Zones and Run Searches (Stored in DB):
+1. ./daily-run.sh 
+
+
 ## Update a Specific Zone:
 1. source env/bin/activate && source config.rc
 2. python manage.py update_zone <zonename>
@@ -17,10 +21,6 @@ Watchman is a security tool that watches domains and fqdns
 ## Create Searches
 1. Browse to http://localhost:8000/admin/Watchman/search/
 2. Add relevant clients and searches
- 
-
-## Manually Run Searches (Stored in DB):
-1. ./daily-run.sh 
 
 
 ## See Search Results
