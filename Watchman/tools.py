@@ -4,6 +4,7 @@ import glob
 import os
 import dns.resolver
 import socket
+import requests
 from time import time
 from django.db import IntegrityError
 from django.conf import settings
@@ -20,13 +21,34 @@ logger = logging.getLogger(__name__)
 MAX_ITERATIONS = 11000000000
 
 
+def has_website(domain, timeout=3):
+    try_list = [
+        f'http://{domain}',
+        f'https://{domain}',
+        f'http://www.{domain}',
+        f'https://www.{domain}',
+    ]
+
+    for url in try_list:
+        try:
+            response = requests.get(url, timeout=timeout)
+            response.raise_for_status()
+            return True
+        except Exception as e:
+            print(f"Unable to fetch {url}")
+            print(f"Exception: {e}")
+    return False
+
 def has_mx(domain):
     try:
-        ans = dns.resolver.resolve(domain, "MX")
-        logger.info(f"mx found! for {domain}")
-        return True
-    except dns.resolver.NXDOMAIN:
-        logger.warn("mx not found")
+        for x in dns.resolver.resolve(domain, 'MX'):
+            return True
+    except dns.resolver.NoAnswer:
+        print("No answer")
+        return False
+    except dns.resolver.NoNameservers:
+        print("No nameservers")
+        return False
     return False
 
 
@@ -68,6 +90,12 @@ def expire_new():
             m.save()
         except Exception as e:
             logger.error(e)
+
+
+def purge_new():
+    threshold = timezone.now() - timedelta(days=settings.MAX_NEW_AGE)
+    NewDomain.objects.filter(created__lt=threshold).delete()
+
 
 
 def diff_zone(zone):
@@ -321,14 +349,26 @@ class MatchEditDistance(MatchMethod):
         return hit_list
 
 
+def build_alert_message(match, alert):
+    domain = match.hit
+    now = datetime.utcnow().isoformat()
+    ref_url = f"{BASE_URL}/api/hits/?id={alert.id}"
+
+    message = (f"[WATCHMAN ALERT] {now} : Match Detected on {domain}\n"
+               f"has_website: {has_website(domain)}\n"
+               f"has_mx: {has_mx(domain)}\n"
+               f"For more information: {ref_url}")
+    return message
+
+
+
 def run_alerts():
     for m in Match.objects.filter(has_alerted=False).filter(is_fp=False).all():
         has_error = False
         alerts = ClientAlert.objects.filter(client=m.client).filter(enabled=True).all()
         for a in alerts:
-            now = datetime.utcnow().isoformat()
             config = a.config
-            message = f"[WATCHMAN ALERT] {now} : Match Detected on {m.hit} for more information {BASE_URL}/api/hits/?id={a.id}"
+            message = build_alert_message(m, a)
             if a.alert_type == "slack":
                 logger.info("alert type = slackmsg")
                 sendSlackMessage(config["apikey"], config["channel"], message)
@@ -350,4 +390,6 @@ def run_alerts():
 
         if not has_error:
             m.has_alerted = True
-            m.save()
+            #fixme
+            print("FIXME: need to save when not testing")
+            #m.save()
