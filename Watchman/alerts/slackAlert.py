@@ -10,15 +10,15 @@ def sendSlackMessage(apitoken: str, channel: str, message: str) -> None:
     try:
         logger.debug(f"Sending Slack message: {message}")
         client = WebClient(apitoken)
-        response = client.chat_postMessage(channel=channel, text=f"{message}")
+        response = client.chat_postMessage(channel=channel, text=message)
         logger.debug(f"Response: {response}")
     except SlackApiError as e:
         logger.error(f"{e} {response}")
 
 
-def sendSlackWebhook(url: str, message: str) -> None:
+def sendSlackWebhook(url: str, message: str, blocks: list) -> None:
     logger.debug(f"Sending SlackWebook message: {message}")
     webhook = WebhookClient(url)
-    response = webhook.send(text=message)
+    response = webhook.send(text="words", blocks=blocks)
     assert response.status_code == 200
     assert response.body == "ok"

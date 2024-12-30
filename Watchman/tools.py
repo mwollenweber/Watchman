@@ -349,17 +349,39 @@ class MatchEditDistance(MatchMethod):
         return hit_list
 
 
-def build_alert_message(match, alert):
+def build_message(match, alert):
+    #see https://api.slack.com/messaging/webhooks
     domain = match.hit
     now = datetime.utcnow().isoformat()
     ref_url = f"{BASE_URL}/api/hits/?id={alert.id}"
+    reputation = 0
+    registrar = "TBD"
+    creation_date = "TBD"
+    threat_severity_level = "TBD"
 
-    message = (f"[WATCHMAN ALERT] {now} : Match Detected on {domain}\n"
-               f"has_website: {has_website(domain)}\n"
-               f"has_mx: {has_mx(domain)}\n"
-               f"For more information: {ref_url}")
-    return message
+    text = (
+        f"*[WATCHMAN ALERT] Imposter Domain Detected at {now}* \n"
+        f"Match Detected on: `{domain}`\n"
+        f"- Registrar: {registrar}\n"
+        f"- Creation Date: {creation_date}\n"
+        f"- has_website: {has_website(domain)}\n"
+        f"- has_mx: {has_mx(domain)}\n"
+        f"- reputation:  {reputation}\n"
+        f"- threat_severity_level: {threat_severity_level}\n"
+        f"For more information: {ref_url}"
+    )
 
+    blocks = [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": text
+            }
+        }
+    ]
+
+    return text, blocks
 
 
 def run_alerts():
@@ -368,14 +390,16 @@ def run_alerts():
         alerts = ClientAlert.objects.filter(client=m.client).filter(enabled=True).all()
         for a in alerts:
             config = a.config
-            message = build_alert_message(m, a)
+            message, blocks = build_message(m, a)
             if a.alert_type == "slack":
                 logger.info("alert type = slackmsg")
-                sendSlackMessage(config["apikey"], config["channel"], message)
+                #fixme
+                print("Renable slack")
+                #sendSlackMessage(config["apikey"], config["channel"], message)
             elif a.alert_type == "slackWebhook":
                 logger.info("slackwebhook")
                 webhook = config["webhook"]
-                sendSlackWebhook(webhook, message)
+                sendSlackWebhook(webhook, message, blocks)
             elif a.alert_type == "gmail":
                 logger.info("fixme: alert type = gmail")
             elif a.alert_type == "email":
