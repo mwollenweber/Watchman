@@ -4,6 +4,7 @@ from pathlib import Path
 from logging.config import dictConfig
 
 BASE_URL = os.getenv("BASE_URL") or "http://localhost:8000"
+VT_APIKEY = os.getenv("VT_APIKEY") or warn("No VT API key provided")
 
 # Celery settings
 CELERY_BROKER_URL = "redis://localhost:6379/0"
@@ -58,6 +59,7 @@ ALLOWED_HOSTS = [
     ".herokuapp.com",
     "localhost",
     "127.0.0.1",
+    "watchman-dev.insomniac.tech",
 ]
 
 # Application definition

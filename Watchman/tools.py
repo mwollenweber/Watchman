@@ -15,6 +15,7 @@ from Watchman.models import Domain, NewDomain, Match, Search, ClientAlert
 from Watchman.alerts.slackAlert import sendSlackMessage, sendSlackWebhook
 from Watchman.alerts.email import send_email
 from Watchman.settings import BASE_URL, DEBUG
+from Watchman.enrichments.vt import VT
 
 logger = logging.getLogger(__name__)
 
@@ -23,10 +24,10 @@ MAX_ITERATIONS = 11000000000
 
 def has_website(domain, timeout=3):
     try_list = [
-        f'http://{domain}',
-        f'https://{domain}',
-        f'http://www.{domain}',
-        f'https://www.{domain}',
+        f"http://{domain}",
+        f"https://{domain}",
+        f"http://www.{domain}",
+        f"https://www.{domain}",
     ]
 
     for url in try_list:
@@ -35,21 +36,32 @@ def has_website(domain, timeout=3):
             response.raise_for_status()
             return True
         except Exception as e:
-            print(f"Unable to fetch {url}")
-            print(f"Exception: {e}")
+            logger.warn(f"Unable to fetch {url}")
+            logger.warn(f"Exception: {e}")
     return False
+
 
 def has_mx(domain):
     try:
-        for x in dns.resolver.resolve(domain, 'MX'):
+        for x in dns.resolver.resolve(domain, "MX"):
             return True
     except dns.resolver.NoAnswer:
-        print("No answer")
-        return False
+        logger.warn("No answer")
     except dns.resolver.NoNameservers:
-        print("No nameservers")
-        return False
+        logger.warn("No nameservers")
+
+    # todo check VT and add any records
     return False
+
+
+def get_mx(domain):
+    mx_records = []
+    for x in dns.resolver.resolve(domain, "MX"):
+        mx_records.append(x.to_text())
+
+    # todo check VT and add any records
+
+    return mx_records
 
 
 def has_ip(fqdn):
@@ -95,7 +107,6 @@ def expire_new():
 def purge_new():
     threshold = timezone.now() - timedelta(days=settings.MAX_NEW_AGE)
     NewDomain.objects.filter(created__lt=threshold).delete()
-
 
 
 def diff_zone(zone):
@@ -281,7 +292,7 @@ def diff_files(old_file, new_file):
 
         count += 1
         if count > MAX_ITERATIONS:
-            logging.warn("MAX ITERATIONS HIT. Quitting")
+            logging.warning("MAX ITERATIONS HIT. Quitting")
             break
         if len(new) < 1:
             break
@@ -349,15 +360,17 @@ class MatchEditDistance(MatchMethod):
         return hit_list
 
 
-def build_message(match, alert):
-    #see https://api.slack.com/messaging/webhooks
+def build_message(match):
+    # see https://api.slack.com/messaging/webhooks
     domain = match.hit
     now = datetime.utcnow().isoformat()
-    ref_url = f"{BASE_URL}/api/hits/?id={alert.id}"
-    reputation = 0
-    registrar = "TBD"
-    creation_date = "TBD"
-    threat_severity_level = "TBD"
+    ref_url = f"{BASE_URL}/api/hits/?id={match.id}&enrich=True"
+
+    vt_data = VT().lookup_domain(domain)
+    reputation = vt_data.get("attributes").get("reputation")
+    registrar = vt_data.get("attributes").get("registrar")
+    creation_date = vt_data.get("attributes").get("creation_date")
+    threat_severity_level = vt_data.get("attributes").get("threat_severity").get("threat_severity_level")
 
     text = (
         f"*[WATCHMAN ALERT] Imposter Domain Detected at {now}* \n"
@@ -371,15 +384,7 @@ def build_message(match, alert):
         f"For more information: {ref_url}"
     )
 
-    blocks = [
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": text
-            }
-        }
-    ]
+    blocks = [{"type": "section", "text": {"type": "mrkdwn", "text": text}}]
 
     return text, blocks
 
@@ -390,12 +395,12 @@ def run_alerts():
         alerts = ClientAlert.objects.filter(client=m.client).filter(enabled=True).all()
         for a in alerts:
             config = a.config
-            message, blocks = build_message(m, a)
+            message, blocks = build_message(m)
             if a.alert_type == "slack":
                 logger.info("alert type = slackmsg")
-                #fixme
-                print("Renable slack")
-                #sendSlackMessage(config["apikey"], config["channel"], message)
+                # fixme
+                logger.warn("Renable slack")
+                # sendSlackMessage(config["apikey"], config["channel"], message)
             elif a.alert_type == "slackWebhook":
                 logger.info("slackwebhook")
                 webhook = config["webhook"]
@@ -414,6 +419,6 @@ def run_alerts():
 
         if not has_error:
             m.has_alerted = True
-            #fixme
-            print("FIXME: need to save when not testing")
-            #m.save()
+            # fixme
+            logger.warn("FIXME: need to save when not testing")
+            # m.save()

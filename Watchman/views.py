@@ -16,6 +16,8 @@ from django.contrib.auth.forms import (
 from django.contrib.auth import login as auth_login
 from django.views.decorators.http import require_http_methods
 from Watchman.models import Domain, ZoneList, Match, ClientUser, NewDomain
+from Watchman.tools import has_mx, has_website
+from Watchman.enrichments.vt import VT
 
 logger = logging.getLogger(__name__)
 
@@ -181,6 +183,7 @@ def new_domains(request):
 @login_required()
 def hits(request):
     event_id = request.GET.get("id", None)
+    enrich = request.GET.get("enrich", False)
     if request.user.is_superuser:
         if event_id:
             hit_list = Match.objects.filter(id=event_id)
@@ -195,20 +198,27 @@ def hits(request):
 
     ret_list = []
     for hit in hit_list:
-        ret_list.append(
-            {
-                "name": hit.hit,
-                "id": hit.id,
-                "created": hit.created,
-                "modified": hit.last_modified,
-                "is_new": hit.is_new,
-                "is_reviewed": hit.is_reviewed,
-                "is_fp": hit.is_fp,
-                "client": hit.client.name,
+        if enrich: vt_data = VT().lookup_domain(hit.hit)
+        ret = {
+            "name": hit.hit,
+            "id": hit.id,
+            "created": hit.created,
+            "modified": hit.last_modified,
+            "is_new": hit.is_new,
+            "is_reviewed": hit.is_reviewed,
+            "is_fp": hit.is_fp,
+            "client": hit.client.name,
+            #fixme this is slow
+            # "has_mx": has_mx(hit.hit),
+            # "has_website": has_website(hit.hit),
+        }
+        if enrich:
+            vt_data = VT().lookup_domain(hit.hit)
+            ret["enrichments"] = {
+                "virustotal": vt_data,
             }
-        )
-    ret = {"status": "success", "count": len(ret_list), "hits": ret_list}
-    return JsonResponse(ret)
+        ret_list.append(ret)
+    return JsonResponse({"status": "success", "count": len(ret_list), "hits": ret_list})
 
 
 @require_http_methods(["GET"])

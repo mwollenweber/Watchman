@@ -6,17 +6,6 @@ from time import sleep
 
 
 
-
-def get_mx(domain):
-    mx_records = []
-    for x in dns.resolver.resolve(domain, 'MX'):
-        mx_records.append(x.to_text())
-    return mx_records
-
-
-
-
-
 def screenshot_url(url, sleep_time=1):
     #fixme #this is unsafe
     #selenium is nice but we need ephmeral instance2
