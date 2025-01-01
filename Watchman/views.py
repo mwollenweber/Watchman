@@ -5,10 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth import authenticate, logout  # , login
 from django.shortcuts import render, redirect
-from django.utils.html import escape
-from django.utils.timezone import make_aware
 from django.template import loader
-from django.conf import settings
 from django.contrib.auth.forms import (
     AuthenticationForm,
     UserCreationForm,
@@ -16,8 +13,8 @@ from django.contrib.auth.forms import (
 from django.contrib.auth import login as auth_login
 from django.views.decorators.http import require_http_methods
 from Watchman.models import Domain, ZoneList, Match, ClientUser, NewDomain
-from Watchman.tools import has_mx, has_website
 from Watchman.enrichments.vt import VT
+
 
 logger = logging.getLogger(__name__)
 
@@ -198,7 +195,6 @@ def hits(request):
 
     ret_list = []
     for hit in hit_list:
-        if enrich: vt_data = VT().lookup_domain(hit.domain)
         ret = {
             "id": hit.id,
             "domain": hit.domain,

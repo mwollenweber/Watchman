@@ -46,12 +46,23 @@ def has_mx(domain):
         for x in dns.resolver.resolve(domain, "MX"):
             return True
     except dns.resolver.NoAnswer:
-        logger.warn("No answer")
+        logger.warning("No answer")
     except dns.resolver.NoNameservers:
-        logger.warn("No nameservers")
+        logger.warning("No nameservers")
+    except dns.resolver.NXDOMAIN:
+        logger.warning("No such domain")
 
-    # todo check VT and add any records
+    try:
+        # check the VT lookup for MX records
+        last_dns_records = VT().lookup_domain(domain).get('attributes').get('last_dns_records')
+        return any(rec.get('type') == 'MX' for rec in last_dns_records)
+    except requests.exceptions.HTTPError as e:
+        logger.warning(f"HTTP Error: {e}")
     return False
+
+
+
+
 
 
 def get_mx(domain):
@@ -193,39 +204,14 @@ def run_searches():
                                 "last_modified": timezone.now(),
                             },
                         )
-                        db_hit.has_mx = has_mx(h)
-                        db_hit.has_website = has_website(h)
-                        db_hit.save()
+                        if created:
+                            #Do these enrichments after the record is created so that an error doesn't drop the record
+                            db_hit.has_mx = has_mx(h)
+                            db_hit.has_website = has_website(h)
+                            db_hit.save()
 
                     except Exception as e:
                         logger.error(e)
-
-    # run searches on all domains a
-    # logger.info("Running full domain searches")
-    # target_list = Domain.objects.all().values_list("domain", flat=True)
-    # search_list = Search.objects.filter(is_active=True, database="domains")
-    # for s in search_list:
-    #     if s.last_completed < timezone.now() - timedelta(seconds=s.update_interval):
-    #         if s.last_updated < timezone.now() - timedelta(
-    #             seconds=settings.MIN_UPDATE_INTERVAL
-    #         ):
-    #             logger.info(f"{s} on {len(target_list)} domains")
-    #             # todo = update status timestamps
-    #             hits = (
-    #                 run_search(s.method, s.criteria, target_list, tolerance=s.tolerance)
-    #                 or []
-    #             )
-    #             for h in hits:
-    #                 try:
-    #                     Match.objects.get_or_create(
-    #                         hit=h,
-    #                         client=s.client,
-    #                         defaults={
-    #                             "last_modified": timezone.now(),
-    #                         },
-    #                     )
-    #                 except Exception as e:
-    #                     logger.error(e)
 
 
 def load_diff(domain_list):
@@ -402,9 +388,7 @@ def run_alerts():
             message, blocks = build_message(m)
             if a.alert_type == "slack":
                 logger.info("alert type = slackmsg")
-                # fixme
-                logger.warn("Renable slack")
-                # sendSlackMessage(config["apikey"], config["channel"], message)
+                sendSlackMessage(config["apikey"], config["channel"], message)
             elif a.alert_type == "slackWebhook":
                 logger.info("slackwebhook")
                 webhook = config["webhook"]
@@ -423,6 +407,4 @@ def run_alerts():
 
         if not has_error:
             m.has_alerted = True
-            # fixme
-            logger.warn("FIXME: need to save when not testing")
-            # m.save()
+            m.save()
