@@ -186,42 +186,46 @@ def run_searches():
                 )
                 for h in hits:
                     try:
-                        Match.objects.get_or_create(
-                            hit=h,
+                        db_hit, created = Match.objects.get_or_create(
+                            domain=h,
                             client=s.client,
                             defaults={
                                 "last_modified": timezone.now(),
                             },
                         )
+                        db_hit.has_mx = has_mx(h)
+                        db_hit.has_website = has_website(h)
+                        db_hit.save()
+
                     except Exception as e:
                         logger.error(e)
 
     # run searches on all domains a
-    logger.info("Running full domain searches")
-    target_list = Domain.objects.all().values_list("domain", flat=True)
-    search_list = Search.objects.filter(is_active=True, database="domains")
-    for s in search_list:
-        if s.last_completed < timezone.now() - timedelta(seconds=s.update_interval):
-            if s.last_updated < timezone.now() - timedelta(
-                seconds=settings.MIN_UPDATE_INTERVAL
-            ):
-                logger.info(f"{s} on {len(target_list)} domains")
-                # todo = update status timestamps
-                hits = (
-                    run_search(s.method, s.criteria, target_list, tolerance=s.tolerance)
-                    or []
-                )
-                for h in hits:
-                    try:
-                        Match.objects.get_or_create(
-                            hit=h,
-                            client=s.client,
-                            defaults={
-                                "last_modified": timezone.now(),
-                            },
-                        )
-                    except Exception as e:
-                        logger.error(e)
+    # logger.info("Running full domain searches")
+    # target_list = Domain.objects.all().values_list("domain", flat=True)
+    # search_list = Search.objects.filter(is_active=True, database="domains")
+    # for s in search_list:
+    #     if s.last_completed < timezone.now() - timedelta(seconds=s.update_interval):
+    #         if s.last_updated < timezone.now() - timedelta(
+    #             seconds=settings.MIN_UPDATE_INTERVAL
+    #         ):
+    #             logger.info(f"{s} on {len(target_list)} domains")
+    #             # todo = update status timestamps
+    #             hits = (
+    #                 run_search(s.method, s.criteria, target_list, tolerance=s.tolerance)
+    #                 or []
+    #             )
+    #             for h in hits:
+    #                 try:
+    #                     Match.objects.get_or_create(
+    #                         hit=h,
+    #                         client=s.client,
+    #                         defaults={
+    #                             "last_modified": timezone.now(),
+    #                         },
+    #                     )
+    #                 except Exception as e:
+    #                     logger.error(e)
 
 
 def load_diff(domain_list):
@@ -362,7 +366,7 @@ class MatchEditDistance(MatchMethod):
 
 def build_message(match):
     # see https://api.slack.com/messaging/webhooks
-    domain = match.hit
+    domain = match.domain
     now = datetime.utcnow().isoformat()
     ref_url = f"{BASE_URL}/api/hits/?id={match.id}&enrich=True"
 

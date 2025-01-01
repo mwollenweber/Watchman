@@ -198,27 +198,22 @@ def hits(request):
 
     ret_list = []
     for hit in hit_list:
-        if enrich: vt_data = VT().lookup_domain(hit.hit)
+        if enrich: vt_data = VT().lookup_domain(hit.domain)
         ret = {
             "id": hit.id,
-            "name": hit.hit,
+            "domain": hit.domain,
             "created": hit.created,
             "modified": hit.last_modified,
             "is_new": hit.is_new,
             "is_reviewed": hit.is_reviewed,
             "is_fp": hit.is_fp,
             "client": hit.client.name,
-            #has_alerted?
-            #fixme this is slow
-            # "has_mx": has_mx(hit.hit),
-            # "has_website": has_website(hit.hit),
+            "has_mx": hit.has_mx,
+            "has_website": hit.has_website,
+            "has_alerted": hit.has_alerted,
         }
         if enrich:
-            #fixme
-            ret['has_mx'] = has_mx(hit.hit)
-            ret['has_website'] = has_website(hit.hit)
-
-            vt_data = VT().lookup_domain(hit.hit)
+            vt_data = VT().lookup_domain(hit.domain)
             ret["enrichments"] = {
                 "virustotal": vt_data,
             }

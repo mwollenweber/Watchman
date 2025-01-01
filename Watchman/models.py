@@ -59,12 +59,15 @@ class NewDomain(models.Model):
 
 
 class Match(models.Model):
-    hit = models.CharField(max_length=255, db_index=True)
+    domain = models.CharField(max_length=255, db_index=True)
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
     is_new = models.BooleanField(default=True, blank=True, db_index=True)
     is_reviewed = models.BooleanField(default=False, blank=True, db_index=True)
     is_fp = models.BooleanField(default=False, blank=True, db_index=True)
     is_ignored = models.BooleanField(default=False, blank=True, db_index=True)
+    is_public =models.BooleanField(default=False, blank=True, db_index=True)
+    has_mx = models.BooleanField(default=False, blank=True, db_index=True)
+    has_website = models.BooleanField(default=False, blank=True, db_index=True)
     created = models.DateTimeField(auto_now_add=True, blank=True)
     last_modified = models.DateTimeField(auto_now=True, blank=True)
     has_alerted = models.BooleanField(default=False, db_index=True)
