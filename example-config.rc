@@ -5,5 +5,6 @@ export DBHOST='localhost'
 export ICANN_USERNAME='username@example.com'
 export ICANN_PASSWORD='Abcdef#12345678'
 export MAX_WORKERS=2
-export ENABLED_ZONES="app bbc biz blog careers cheap data docs email eus gov inc info jobs java kosher law llc link lol mov net new one online org page pay  pics pro run security sucks team tech technology tel top xyz vip zip com"
-
+export ENABLED_ZONES="app bbc biz blog careers cheap click data dev docs email eus gov inc info jobs java kosher law llc link lol mov net new ninja one online org page pay pics pro realtor run security shop site store sucks team tech technology tel top website work wtf xyz vip you zip com"
+export VT_APIKEY=''
+export BASE_URL='http://localhost'

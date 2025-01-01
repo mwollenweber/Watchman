@@ -5,10 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth import authenticate, logout  # , login
 from django.shortcuts import render, redirect
-from django.utils.html import escape
-from django.utils.timezone import make_aware
 from django.template import loader
-from django.conf import settings
 from django.contrib.auth.forms import (
     AuthenticationForm,
     UserCreationForm,
@@ -16,6 +13,8 @@ from django.contrib.auth.forms import (
 from django.contrib.auth import login as auth_login
 from django.views.decorators.http import require_http_methods
 from Watchman.models import Domain, ZoneList, Match, ClientUser, NewDomain
+from Watchman.enrichments.vt import VT
+
 
 logger = logging.getLogger(__name__)
 
@@ -181,6 +180,7 @@ def new_domains(request):
 @login_required()
 def hits(request):
     event_id = request.GET.get("id", None)
+    enrich = request.GET.get("enrich", False)
     if request.user.is_superuser:
         if event_id:
             hit_list = Match.objects.filter(id=event_id)
@@ -195,20 +195,26 @@ def hits(request):
 
     ret_list = []
     for hit in hit_list:
-        ret_list.append(
-            {
-                "name": hit.hit,
-                "id": hit.id,
-                "created": hit.created,
-                "modified": hit.last_modified,
-                "is_new": hit.is_new,
-                "is_reviewed": hit.is_reviewed,
-                "is_fp": hit.is_fp,
-                "client": hit.client.name,
+        ret = {
+            "id": hit.id,
+            "domain": hit.domain,
+            "created": hit.created,
+            "modified": hit.last_modified,
+            "is_new": hit.is_new,
+            "is_reviewed": hit.is_reviewed,
+            "is_fp": hit.is_fp,
+            "client": hit.client.name,
+            "has_mx": hit.has_mx,
+            "has_website": hit.has_website,
+            "has_alerted": hit.has_alerted,
+        }
+        if enrich:
+            vt_data = VT().lookup_domain(hit.domain)
+            ret["enrichments"] = {
+                "virustotal": vt_data,
             }
-        )
-    ret = {"status": "success", "count": len(ret_list), "hits": ret_list}
-    return JsonResponse(ret)
+        ret_list.append(ret)
+    return JsonResponse({"status": "success", "count": len(ret_list), "hits": ret_list})
 
 
 @require_http_methods(["GET"])

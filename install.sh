@@ -1,9 +1,5 @@
 #!/bin/bash
 
-if [ "$EUID" -ne 0 ]
-  then echo "Please run as root"
-  exit
-fi
 
 # For OSX development
 if [[ `uname` == "Darwin" ]]; then
@@ -20,10 +16,10 @@ if [[ `uname` == "Darwin" ]]; then
 else
     script_directory=$(dirname $(readlink -f $BASH_SOURCE))
 
-    apt-get update
-    apt-get install screen git gh python3 virtualenv postgresql-all redis
-    service postgresql start
-    service redis start
+    sudo apt-get update
+    sudo apt-get install screen git gh python3 virtualenv postgresql-all redis
+    sudo service postgresql start
+    sudo service redis start
 fi
 
 source $script_directory/config.rc
@@ -35,10 +31,9 @@ sudo -u postgres psql -c "ALTER DATABASE $DBNAME OWNER TO $DBUSER;"
 mkdir $script_directory/tmp
 virtualenv env
 source env/bin/activate
-pip install -r requirements
+pip install -r requirements.txt
 python manage.py makemigrations
 python manage.py migrate
 python manage.py init_zones
 python manage.py enable_zone `echo $ENABLED_ZONES`
 python manage.py createsuperuser
-

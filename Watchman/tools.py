@@ -4,6 +4,7 @@ import glob
 import os
 import dns.resolver
 import socket
+import requests
 from time import time
 from django.db import IntegrityError
 from django.conf import settings
@@ -14,20 +15,64 @@ from Watchman.models import Domain, NewDomain, Match, Search, ClientAlert
 from Watchman.alerts.slackAlert import sendSlackMessage, sendSlackWebhook
 from Watchman.alerts.email import send_email
 from Watchman.settings import BASE_URL, DEBUG
+from Watchman.enrichments.vt import VT
 
 logger = logging.getLogger(__name__)
 
 MAX_ITERATIONS = 11000000000
 
 
+def has_website(domain, timeout=3):
+    try_list = [
+        f"http://{domain}",
+        f"https://{domain}",
+        f"http://www.{domain}",
+        f"https://www.{domain}",
+    ]
+
+    for url in try_list:
+        try:
+            response = requests.get(url, timeout=timeout)
+            response.raise_for_status()
+            return True
+        except Exception as e:
+            logger.warn(f"Unable to fetch {url}")
+            logger.warn(f"Exception: {e}")
+    return False
+
+
 def has_mx(domain):
     try:
-        ans = dns.resolver.resolve(domain, "MX")
-        logger.info(f"mx found! for {domain}")
-        return True
+        for x in dns.resolver.resolve(domain, "MX"):
+            return True
+    except dns.resolver.NoAnswer:
+        logger.warning("No answer")
+    except dns.resolver.NoNameservers:
+        logger.warning("No nameservers")
     except dns.resolver.NXDOMAIN:
-        logger.warn("mx not found")
+        logger.warning("No such domain")
+
+    try:
+        # check the VT lookup for MX records
+        last_dns_records = VT().lookup_domain(domain).get('attributes').get('last_dns_records')
+        return any(rec.get('type') == 'MX' for rec in last_dns_records)
+    except requests.exceptions.HTTPError as e:
+        logger.warning(f"HTTP Error: {e}")
     return False
+
+
+
+
+
+
+def get_mx(domain):
+    mx_records = []
+    for x in dns.resolver.resolve(domain, "MX"):
+        mx_records.append(x.to_text())
+
+    # todo check VT and add any records
+
+    return mx_records
 
 
 def has_ip(fqdn):
@@ -68,6 +113,11 @@ def expire_new():
             m.save()
         except Exception as e:
             logger.error(e)
+
+
+def purge_new():
+    threshold = timezone.now() - timedelta(days=settings.MAX_NEW_AGE)
+    NewDomain.objects.filter(created__lt=threshold).delete()
 
 
 def diff_zone(zone):
@@ -128,7 +178,6 @@ def run_search(method, criteria, target_list, tolerance=None):
 
 def run_searches():
     logging.info("Running Searches")
-
     # run the new domain as target list first
     logger.info("Running newdomain searches")
     target_list = NewDomain.objects.filter(is_expired=False).values_list(
@@ -148,40 +197,19 @@ def run_searches():
                 )
                 for h in hits:
                     try:
-                        Match.objects.get_or_create(
-                            hit=h,
+                        db_hit, created = Match.objects.get_or_create(
+                            domain=h,
                             client=s.client,
                             defaults={
                                 "last_modified": timezone.now(),
                             },
                         )
-                    except Exception as e:
-                        logger.error(e)
+                        if created:
+                            #Do these enrichments after the record is created so that an error doesn't drop the record
+                            db_hit.has_mx = has_mx(h)
+                            db_hit.has_website = has_website(h)
+                            db_hit.save()
 
-    # run searches on all domains a
-    logger.info("Running full domain searches")
-    target_list = Domain.objects.all().values_list("domain", flat=True)
-    search_list = Search.objects.filter(is_active=True, database="domains")
-    for s in search_list:
-        if s.last_completed < timezone.now() - timedelta(seconds=s.update_interval):
-            if s.last_updated < timezone.now() - timedelta(
-                seconds=settings.MIN_UPDATE_INTERVAL
-            ):
-                logger.info(f"{s} on {len(target_list)} domains")
-                # todo = update status timestamps
-                hits = (
-                    run_search(s.method, s.criteria, target_list, tolerance=s.tolerance)
-                    or []
-                )
-                for h in hits:
-                    try:
-                        Match.objects.get_or_create(
-                            hit=h,
-                            client=s.client,
-                            defaults={
-                                "last_modified": timezone.now(),
-                            },
-                        )
                     except Exception as e:
                         logger.error(e)
 
@@ -210,6 +238,13 @@ def getZonefiles(zone):
     logger.info("Getting zone files for %s", zone)
     modified_files = glob.glob(f"{settings.TEMP_DIR}/*-{zone}.txt")
     modified_files.sort(key=lambda x: os.path.getmtime(x))
+    if len(modified_files) == 0:
+        logger.error(f"No zone files for {zone}")
+        return
+    if len(modified_files) < 2:
+        logger.warn(f"Only one zone file for {zone}")
+        return modified_files[0], modified_files[-1]
+    # fixme probably don't need/want this
     if DEBUG:
         logger.info(f"DEBUG DIFFING: {modified_files[0]} {modified_files[-1]}")
         return modified_files[0], modified_files[-1]
@@ -235,7 +270,6 @@ def diff_files(old_file, new_file):
     new_list = []
     old = old_file.readline().strip()
     new = new_file.readline().strip()
-
     while len(old) > 0:
         if old == new:
             old = old_file.readline().strip()
@@ -248,9 +282,8 @@ def diff_files(old_file, new_file):
 
         count += 1
         if count > MAX_ITERATIONS:
-            logging.warn("MAX ITERATIONS HIT. Quitting")
+            logging.warning("MAX ITERATIONS HIT. Quitting")
             break
-
         if len(new) < 1:
             break
 
@@ -317,21 +350,49 @@ class MatchEditDistance(MatchMethod):
         return hit_list
 
 
+def build_message(match):
+    # see https://api.slack.com/messaging/webhooks
+    domain = match.domain
+    now = datetime.utcnow().isoformat()
+    ref_url = f"{BASE_URL}/api/hits/?id={match.id}&enrich=True"
+
+    vt_data = VT().lookup_domain(domain)
+    reputation = vt_data.get("attributes").get("reputation")
+    registrar = vt_data.get("attributes").get("registrar")
+    creation_date = vt_data.get("attributes").get("creation_date")
+    threat_severity_level = vt_data.get("attributes").get("threat_severity").get("threat_severity_level")
+
+    text = (
+        f"*[WATCHMAN ALERT] Imposter Domain Detected at {now}* \n"
+        f"Match Detected on: `{domain}`\n"
+        f"- Registrar: {registrar}\n"
+        f"- Creation Date: {creation_date}\n"
+        f"- has_website: {has_website(domain)}\n"
+        f"- has_mx: {has_mx(domain)}\n"
+        f"- reputation:  {reputation}\n"
+        f"- threat_severity_level: {threat_severity_level}\n"
+        f"For more information: {ref_url}"
+    )
+
+    blocks = [{"type": "section", "text": {"type": "mrkdwn", "text": text}}]
+
+    return text, blocks
+
+
 def run_alerts():
     for m in Match.objects.filter(has_alerted=False).filter(is_fp=False).all():
         has_error = False
         alerts = ClientAlert.objects.filter(client=m.client).filter(enabled=True).all()
         for a in alerts:
-            now = datetime.utcnow().isoformat()
             config = a.config
-            message = f"[WATCHMAN ALERT] {now} : Match Detected on {m.hit} for more information {BASE_URL}/api/hits/?id={a.id}"
+            message, blocks = build_message(m)
             if a.alert_type == "slack":
                 logger.info("alert type = slackmsg")
                 sendSlackMessage(config["apikey"], config["channel"], message)
             elif a.alert_type == "slackWebhook":
                 logger.info("slackwebhook")
                 webhook = config["webhook"]
-                sendSlackWebhook(webhook, message)
+                sendSlackWebhook(webhook, message, blocks)
             elif a.alert_type == "gmail":
                 logger.info("fixme: alert type = gmail")
             elif a.alert_type == "email":
