@@ -19,6 +19,6 @@ def sendSlackMessage(apitoken: str, channel: str, message: str) -> None:
 def sendSlackWebhook(url: str, message: str, blocks: list) -> None:
     logger.debug(f"Sending SlackWebook message: {message}")
     webhook = WebhookClient(url)
-    response = webhook.send(text="words", blocks=blocks)
+    response = webhook.send(text=message, blocks=blocks)
     assert response.status_code == 200
     assert response.body == "ok"
