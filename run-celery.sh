@@ -1,14 +1,8 @@
 #!/bin/bash
 
-# For OSX development
-if [[ `uname` == "Darwin" ]]; then
-    script_directory=$(dirname "$0")
-fi
 
-# For Linux production deployment
-if [[ `uname` == "Linux" ]]; then
-    script_directory=$(dirname $(readlink -f $BASH_SOURCE))
-fi
+script_directory=$(dirname $(readlink -f $BASH_SOURCE))
+
 
 if [ -e $script_directory/config.rc ]
 then
