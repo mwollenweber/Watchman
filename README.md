@@ -8,20 +8,27 @@ Watchman is a security tool that watches domains and fqdns
 3. nano config.rc
 4. sudo ./install.sh
 
+### Add a Client
+- http://localhost:8000/admin/Watchman/client/add/
 
-## Update Specified Zones and Run Searches (Stored in DB):
+### Add a Search
+- http://localhost:8000/admin/Watchman/search/add/
+I add the domain - tld as a substring match and the domain+tld as str distance
+
+### Add Alert Config
+http://localhost:8000/admin/Watchman/alertconfig/
+
+
+
+## Run a daily zone update + match + alerts
 1. ./daily-run.sh 
 
 
-## Update a Specific Zone:
-1. source env/bin/activate && source config.rc
-2. python manage.py update_zone <zonename>
+## Other Commands
+### Update a Specific Zone:
+- python manage.py update_zone <zonename>
 
 
-## Create Searches
-1. Browse to http://localhost:8000/admin/Watchman/search/
-2. Add relevant clients and searches
 
-
-## See Search Results
-1. Browse to http://localhost:8000/hits/
+### See Search Results
+- Browse to http://localhost:8000/hits/

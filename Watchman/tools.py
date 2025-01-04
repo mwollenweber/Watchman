@@ -11,7 +11,7 @@ from django.conf import settings
 from Levenshtein import distance
 from django.utils import timezone
 from datetime import timedelta, datetime
-from Watchman.models import Domain, NewDomain, Match, Search, ClientAlert
+from Watchman.models import Domain, NewDomain, Match, Search, AlertConfig
 from Watchman.alerts.slackAlert import sendSlackMessage, sendSlackWebhook
 from Watchman.alerts.email import send_email
 from Watchman.settings import BASE_URL, DEBUG
@@ -54,15 +54,13 @@ def has_mx(domain):
 
     try:
         # check the VT lookup for MX records
-        last_dns_records = VT().lookup_domain(domain).get('attributes').get('last_dns_records')
-        return any(rec.get('type') == 'MX' for rec in last_dns_records)
+        last_dns_records = (
+            VT().lookup_domain(domain).get("attributes").get("last_dns_records")
+        )
+        return any(rec.get("type") == "MX" for rec in last_dns_records)
     except requests.exceptions.HTTPError as e:
         logger.warning(f"HTTP Error: {e}")
     return False
-
-
-
-
 
 
 def get_mx(domain):
@@ -205,7 +203,7 @@ def run_searches():
                             },
                         )
                         if created:
-                            #Do these enrichments after the record is created so that an error doesn't drop the record
+                            # Do these enrichments after the record is created so that an error doesn't drop the record
                             db_hit.has_mx = has_mx(h)
                             db_hit.has_website = has_website(h)
                             db_hit.save()
@@ -360,7 +358,9 @@ def build_message(match):
     reputation = vt_data.get("attributes").get("reputation")
     registrar = vt_data.get("attributes").get("registrar")
     creation_date = vt_data.get("attributes").get("creation_date")
-    threat_severity_level = vt_data.get("attributes").get("threat_severity").get("threat_severity_level")
+    threat_severity_level = (
+        vt_data.get("attributes").get("threat_severity").get("threat_severity_level")
+    )
 
     text = (
         f"*[WATCHMAN ALERT] Imposter Domain Detected at {now}* \n"
@@ -382,23 +382,25 @@ def build_message(match):
 def run_alerts():
     for m in Match.objects.filter(has_alerted=False).filter(is_fp=False).all():
         has_error = False
-        alerts = ClientAlert.objects.filter(client=m.client).filter(enabled=True).all()
-        for a in alerts:
-            config = a.config
+        config_list = (
+            AlertConfig.objects.filter(client=m.client).filter(enabled=True).all()
+        )
+        for config in config_list:
             message, blocks = build_message(m)
-            if a.alert_type == "slack":
+            if config.alert_type == "slack":
                 logger.info("alert type = slackmsg")
-                sendSlackMessage(config["apikey"], config["channel"], message)
-            elif a.alert_type == "slackWebhook":
+                sendSlackMessage(
+                    config.settings["apikey"], config.settings["channel"], message
+                )
+            elif config.alert_type == "slackWebhook":
                 logger.info("slackwebhook")
-                webhook = config["webhook"]
+                webhook = config.settings["webhook"]
                 sendSlackWebhook(webhook, message, blocks)
-            elif a.alert_type == "gmail":
+            elif config.alert_type == "gmail":
                 logger.info("fixme: alert type = gmail")
-            elif a.alert_type == "email":
+            elif config.alert_type == "email":
                 logger.info("alert type = email")
-                config = a.config
-                send_email(config, message)
+                send_email(config.settings, message)
             elif a.alert_type == "s3":
                 logger.info("fixme: alert type = s3")
             else:

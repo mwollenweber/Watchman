@@ -65,7 +65,7 @@ class Match(models.Model):
     is_reviewed = models.BooleanField(default=False, blank=True, db_index=True)
     is_fp = models.BooleanField(default=False, blank=True, db_index=True)
     is_ignored = models.BooleanField(default=False, blank=True, db_index=True)
-    is_public =models.BooleanField(default=False, blank=True, db_index=True)
+    is_public = models.BooleanField(default=False, blank=True, db_index=True)
     has_mx = models.BooleanField(default=False, blank=True, db_index=True)
     has_website = models.BooleanField(default=False, blank=True, db_index=True)
     created = models.DateTimeField(auto_now_add=True, blank=True)
@@ -161,7 +161,7 @@ class MXRecord(models.Model):
         return f"{self.record}: {self.ip}"
 
 
-class ClientAlert(models.Model):
+class AlertConfig(models.Model):
     ALERT_TYPE_CHOICES = (
         ("slack", "slack"),
         ("slackWebhook", "slackWebhook"),
@@ -178,7 +178,10 @@ class ClientAlert(models.Model):
     last_run = models.DateTimeField(auto_now_add=True, blank=True)
     last_completed = models.DateTimeField(auto_now_add=True, blank=True)
     enabled = models.BooleanField(default=True, db_index=True)
-    config = models.JSONField()
+    settings = models.JSONField()
+
+    def __str__(self):
+        return f"{self.client}: {self.alert_type}"
 
 
 class WebPage(models.Model):
@@ -242,6 +245,10 @@ class Watch(models.Model):
     status = models.CharField(
         max_length=32, default="unknown", blank=True, null=True, db_index=True
     )
+
+    class Meta:
+        verbose_name = "Watch"
+        verbose_name_plural = "Watches"
 
 
 class WatchResult(models.Model):
