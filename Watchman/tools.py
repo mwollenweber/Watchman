@@ -358,7 +358,9 @@ def build_message(match):
         vt_data = VT().lookup_domain(domain)
         reputation = vt_data.get("attributes").get("reputation")
         registrar = vt_data.get("attributes").get("registrar")
-        creation_date = vt_data.get("attributes").get("creation_date")
+        vt_epoch = vt_data.get("attributes").get("creation_date")
+        print(f"vt_epoch: {vt_epoch}")
+        creation_date = datetime.fromtimestamp(int(vt_epoch)).isoformat()
         threat_severity_level = (
             vt_data.get("attributes").get("threat_severity").get("threat_severity_level")
         )
