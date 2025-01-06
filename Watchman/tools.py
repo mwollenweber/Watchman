@@ -354,13 +354,24 @@ def build_message(match):
     now = datetime.utcnow().isoformat()
     ref_url = f"{BASE_URL}/api/hits/?id={match.id}&enrich=True"
 
-    vt_data = VT().lookup_domain(domain)
-    reputation = vt_data.get("attributes").get("reputation")
-    registrar = vt_data.get("attributes").get("registrar")
-    creation_date = vt_data.get("attributes").get("creation_date")
-    threat_severity_level = (
-        vt_data.get("attributes").get("threat_severity").get("threat_severity_level")
-    )
+    try:
+        vt_data = VT().lookup_domain(domain)
+        reputation = vt_data.get("attributes").get("reputation")
+        registrar = vt_data.get("attributes").get("registrar")
+        creation_date = vt_data.get("attributes").get("creation_date")
+        threat_severity_level = (
+            vt_data.get("attributes").get("threat_severity").get("threat_severity_level")
+        )
+        vt_data['status'] = 'okay'
+
+    except:
+        vt_data = {}
+        vt_data['status'] = 'error'
+        reputation = 'Unknown'
+        registrar = 'Unknown'
+        creation_date = 'Unknown'
+        threat_severity_level = 'Unknown'
+
 
     text = (
         f"*[WATCHMAN ALERT] Imposter Domain Detected at {now}* \n"
