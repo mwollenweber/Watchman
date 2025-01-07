@@ -359,21 +359,21 @@ def build_message(match):
         reputation = vt_data.get("attributes").get("reputation")
         registrar = vt_data.get("attributes").get("registrar")
         vt_epoch = vt_data.get("attributes").get("creation_date")
-        print(f"vt_epoch: {vt_epoch}")
         creation_date = datetime.fromtimestamp(int(vt_epoch)).isoformat()
         threat_severity_level = (
-            vt_data.get("attributes").get("threat_severity").get("threat_severity_level")
+            vt_data.get("attributes")
+            .get("threat_severity")
+            .get("threat_severity_level")
         )
-        vt_data['status'] = 'okay'
-
-    except:
+        vt_data["status"] = "okay"
+    except Exception as e:
+        logger.debug("Failed to build vt_message", exc_info=True)
         vt_data = {}
-        vt_data['status'] = 'error'
-        reputation = 'Unknown'
-        registrar = 'Unknown'
-        creation_date = 'Unknown'
-        threat_severity_level = 'Unknown'
-
+        vt_data["status"] = "error"
+        reputation = "Unknown"
+        registrar = "Unknown"
+        creation_date = "Unknown"
+        threat_severity_level = "Unknown"
 
     text = (
         f"*[WATCHMAN ALERT] Imposter Domain Detected at {now}* \n"

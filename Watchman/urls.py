@@ -9,6 +9,7 @@ urlpatterns = [
     path("logout", views.logout_view),
     path("api/zonestatus/", views.zone_status),
     path("api/hits/", views.hits),
+    path("api/public_hits/", views.public_hits),
     path("api/search/", views.search),
     path("api/isnod/", views.is_nod),
     path("api/newdomains/", views.new_domains),
