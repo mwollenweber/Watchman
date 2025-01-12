@@ -12,7 +12,7 @@ from Watchman.models import (
     ClientUser,
     Watch,
     WatchResult,
-    ClientAlert,
+    AlertConfig,
 )
 
 
@@ -28,4 +28,4 @@ admin.site.register(PingRecord)
 admin.site.register(ZoneList)
 admin.site.register(Watch)
 admin.site.register(WatchResult)
-admin.site.register(ClientAlert)
+admin.site.register(AlertConfig)

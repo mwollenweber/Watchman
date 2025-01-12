@@ -14,6 +14,7 @@ from django.contrib.auth import login as auth_login
 from django.views.decorators.http import require_http_methods
 from Watchman.models import Domain, ZoneList, Match, ClientUser, NewDomain
 from Watchman.enrichments.vt import VT
+from Watchman.settings import BASE_URL
 
 
 logger = logging.getLogger(__name__)
@@ -107,14 +108,19 @@ def is_nod(request):
         return JsonResponse(
             {
                 "status": "success",
+                "domain": value,
+                "tld": data.tld,
                 "found": True,
                 "is_nod": True,
+                "created": data.created,
+
             }
         )
     else:
         return JsonResponse(
             {
                 "status": "success",
+                "domain": value,
                 "found": False,
                 "is_nod": False,
             }
@@ -137,6 +143,7 @@ def search(request):
         data = NewDomain.objects.filter(domain__icontains=value).all()
         for d in data:
             results.append(d.to_dict())
+    #fixme we're not doing a domain table
     elif search_type == "domain":
         data = Domain.objects.filter(domain__icontains=value).all()
         for d in data:
@@ -158,8 +165,12 @@ def search(request):
 
 @require_http_methods(["GET"])
 def new_domains(request):
+    # fixme - this is slow. Lets build this dataset daily and just return a file
     results = []
-    for domain in NewDomain.objects.filter(is_expired=False).order_by("created"):
+    threshold = datetime.utcnow() - timedelta(days=30)
+    for domain in NewDomain.objects.filter(
+        created__gte=threshold, is_expired=False, is_ignored=False
+    ).order_by("created"):
         results.append(
             {
                 "domain": f"{domain.domain}",
@@ -167,13 +178,32 @@ def new_domains(request):
                 "tld": f"{domain.tld}",
             }
         )
-
     ret = {
         "status": "success",
         "count": len(results),
         "results": results,
     }
     return JsonResponse(ret)
+
+
+@require_http_methods(["GET"])
+def public_hits(request):
+    threshold = datetime.utcnow() - timedelta(days=30)
+    hit_list = Match.objects.filter(
+        created__gte=threshold, is_public=True, is_reviewed=True, is_fp=False
+    ).all()
+    ret_list = []
+    for hit in hit_list:
+        ret = {
+            "id": hit.id,
+            "domain": hit.domain,
+            "created": hit.created,
+            "modified": hit.last_modified,
+            "has_mx": hit.has_mx,
+            "has_website": hit.has_website,
+        }
+        ret_list.append(ret)
+    return JsonResponse({"status": "success", "count": len(ret_list), "hits": ret_list})
 
 
 @require_http_methods(["GET"])
@@ -207,6 +237,7 @@ def hits(request):
             "has_mx": hit.has_mx,
             "has_website": hit.has_website,
             "has_alerted": hit.has_alerted,
+            "edit_link": f"{BASE_URL}/admin/Watchman/match/{hit.id}/",
         }
         if enrich:
             vt_data = VT().lookup_domain(hit.domain)

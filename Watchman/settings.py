@@ -5,6 +5,8 @@ from logging.config import dictConfig
 
 BASE_URL = os.getenv("BASE_URL") or "http://localhost:8000"
 VT_APIKEY = os.getenv("VT_APIKEY") or warn("No VT API key provided")
+ENABLE_WEB_SCREENSHOT = os.getenv("ENABLE_WEB_SCREENSHOT") or False
+I_UNDERSTAND_THIS_IS_DANGEROUS = os.getenv("I_UNDERSTAND_THIS_IS_DANGEROUS") or False
 
 # Celery settings
 CELERY_BROKER_URL = "redis://localhost:6379/0"

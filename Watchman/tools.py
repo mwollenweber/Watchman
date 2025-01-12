@@ -5,21 +5,24 @@ import os
 import dns.resolver
 import socket
 import requests
-from time import time
+from time import time, sleep
 from django.db import IntegrityError
 from django.conf import settings
 from Levenshtein import distance
 from django.utils import timezone
 from datetime import timedelta, datetime
-from Watchman.models import Domain, NewDomain, Match, Search, ClientAlert
+from selenium import webdriver
+from Watchman.models import Domain, NewDomain, Match, Search, AlertConfig
 from Watchman.alerts.slackAlert import sendSlackMessage, sendSlackWebhook
 from Watchman.alerts.email import send_email
-from Watchman.settings import BASE_URL, DEBUG
+from Watchman.settings import BASE_URL, DEBUG, ENABLE_WEB_SCREENSHOT, I_UNDERSTAND_THIS_IS_DANGEROUS
 from Watchman.enrichments.vt import VT
+
+#
+MAX_ITERATIONS = 11000000000
 
 logger = logging.getLogger(__name__)
 
-MAX_ITERATIONS = 11000000000
 
 
 def has_website(domain, timeout=3):
@@ -54,15 +57,13 @@ def has_mx(domain):
 
     try:
         # check the VT lookup for MX records
-        last_dns_records = VT().lookup_domain(domain).get('attributes').get('last_dns_records')
-        return any(rec.get('type') == 'MX' for rec in last_dns_records)
+        last_dns_records = (
+            VT().lookup_domain(domain).get("attributes").get("last_dns_records")
+        )
+        return any(rec.get("type") == "MX" for rec in last_dns_records)
     except requests.exceptions.HTTPError as e:
         logger.warning(f"HTTP Error: {e}")
     return False
-
-
-
-
 
 
 def get_mx(domain):
@@ -205,7 +206,7 @@ def run_searches():
                             },
                         )
                         if created:
-                            #Do these enrichments after the record is created so that an error doesn't drop the record
+                            # Do these enrichments after the record is created so that an error doesn't drop the record
                             db_hit.has_mx = has_mx(h)
                             db_hit.has_website = has_website(h)
                             db_hit.save()
@@ -356,11 +357,26 @@ def build_message(match):
     now = datetime.utcnow().isoformat()
     ref_url = f"{BASE_URL}/api/hits/?id={match.id}&enrich=True"
 
-    vt_data = VT().lookup_domain(domain)
-    reputation = vt_data.get("attributes").get("reputation")
-    registrar = vt_data.get("attributes").get("registrar")
-    creation_date = vt_data.get("attributes").get("creation_date")
-    threat_severity_level = vt_data.get("attributes").get("threat_severity").get("threat_severity_level")
+    try:
+        vt_data = VT().lookup_domain(domain)
+        reputation = vt_data.get("attributes").get("reputation")
+        registrar = vt_data.get("attributes").get("registrar")
+        vt_epoch = vt_data.get("attributes").get("creation_date")
+        creation_date = datetime.fromtimestamp(int(vt_epoch)).isoformat()
+        threat_severity_level = (
+            vt_data.get("attributes")
+            .get("threat_severity")
+            .get("threat_severity_level")
+        )
+        vt_data["status"] = "okay"
+    except Exception as e:
+        logger.debug("Failed to build vt_message", exc_info=True)
+        vt_data = {}
+        vt_data["status"] = "error"
+        reputation = "Unknown"
+        registrar = "Unknown"
+        creation_date = "Unknown"
+        threat_severity_level = "Unknown"
 
     text = (
         f"*[WATCHMAN ALERT] Imposter Domain Detected at {now}* \n"
@@ -382,23 +398,25 @@ def build_message(match):
 def run_alerts():
     for m in Match.objects.filter(has_alerted=False).filter(is_fp=False).all():
         has_error = False
-        alerts = ClientAlert.objects.filter(client=m.client).filter(enabled=True).all()
-        for a in alerts:
-            config = a.config
+        config_list = (
+            AlertConfig.objects.filter(client=m.client).filter(enabled=True).all()
+        )
+        for config in config_list:
             message, blocks = build_message(m)
-            if a.alert_type == "slack":
+            if config.alert_type == "slack":
                 logger.info("alert type = slackmsg")
-                sendSlackMessage(config["apikey"], config["channel"], message)
-            elif a.alert_type == "slackWebhook":
+                sendSlackMessage(
+                    config.settings["apikey"], config.settings["channel"], message
+                )
+            elif config.alert_type == "slackWebhook":
                 logger.info("slackwebhook")
-                webhook = config["webhook"]
+                webhook = config.settings["webhook"]
                 sendSlackWebhook(webhook, message, blocks)
-            elif a.alert_type == "gmail":
+            elif config.alert_type == "gmail":
                 logger.info("fixme: alert type = gmail")
-            elif a.alert_type == "email":
+            elif config.alert_type == "email":
                 logger.info("alert type = email")
-                config = a.config
-                send_email(config, message)
+                send_email(config.settings, message)
             elif a.alert_type == "s3":
                 logger.info("fixme: alert type = s3")
             else:
@@ -408,3 +426,16 @@ def run_alerts():
         if not has_error:
             m.has_alerted = True
             m.save()
+
+
+def screenshot_url(url, sleep_time=1):
+    if ENABLE_WEB_SCREENSHOT and I_UNDERSTAND_THIS_IS_DANGEROUS:
+        logging.warning("Screenshots are dangerous. Don't do this")
+        #fixme #this is unsafe
+        #selenium is nice but we need ephmeral instance2
+        #https://dev.to/shadow_b/capturing-full-webpage-screenshots-with-selenium-in-python-a-step-by-step-guide-187f
+        #https://pytutorial.com/exploring-different-ways-to-capture-web-page-screenshots-in-python/#google_vignette
+        driver = webdriver.Firefox()
+        driver.get(url)
+        sleep(sleep_time)
+        return driver.get_screenshot_as_png()
