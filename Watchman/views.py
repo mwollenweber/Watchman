@@ -14,6 +14,7 @@ from django.contrib.auth import login as auth_login
 from django.views.decorators.http import require_http_methods
 from Watchman.models import Domain, ZoneList, Match, ClientUser, NewDomain
 from Watchman.enrichments.vt import VT
+from Watchman.settings import BASE_URL
 
 
 logger = logging.getLogger(__name__)
@@ -107,14 +108,19 @@ def is_nod(request):
         return JsonResponse(
             {
                 "status": "success",
+                "domain": value,
+                "tld": data.tld,
                 "found": True,
                 "is_nod": True,
+                "created": data.created,
+
             }
         )
     else:
         return JsonResponse(
             {
                 "status": "success",
+                "domain": value,
                 "found": False,
                 "is_nod": False,
             }
@@ -231,6 +237,7 @@ def hits(request):
             "has_mx": hit.has_mx,
             "has_website": hit.has_website,
             "has_alerted": hit.has_alerted,
+            "edit_link": f"{BASE_URL}/admin/Watchman/match/{hit.id}/",
         }
         if enrich:
             vt_data = VT().lookup_domain(hit.domain)

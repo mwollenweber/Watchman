@@ -5,21 +5,24 @@ import os
 import dns.resolver
 import socket
 import requests
-from time import time
+from time import time, sleep
 from django.db import IntegrityError
 from django.conf import settings
 from Levenshtein import distance
 from django.utils import timezone
 from datetime import timedelta, datetime
+from selenium import webdriver
 from Watchman.models import Domain, NewDomain, Match, Search, AlertConfig
 from Watchman.alerts.slackAlert import sendSlackMessage, sendSlackWebhook
 from Watchman.alerts.email import send_email
-from Watchman.settings import BASE_URL, DEBUG
+from Watchman.settings import BASE_URL, DEBUG, ENABLE_WEB_SCREENSHOT, I_UNDERSTAND_THIS_IS_DANGEROUS
 from Watchman.enrichments.vt import VT
+
+#
+MAX_ITERATIONS = 11000000000
 
 logger = logging.getLogger(__name__)
 
-MAX_ITERATIONS = 11000000000
 
 
 def has_website(domain, timeout=3):
@@ -423,3 +426,16 @@ def run_alerts():
         if not has_error:
             m.has_alerted = True
             m.save()
+
+
+def screenshot_url(url, sleep_time=1):
+    if ENABLE_WEB_SCREENSHOT and I_UNDERSTAND_THIS_IS_DANGEROUS:
+        logging.warning("Screenshots are dangerous. Don't do this")
+        #fixme #this is unsafe
+        #selenium is nice but we need ephmeral instance2
+        #https://dev.to/shadow_b/capturing-full-webpage-screenshots-with-selenium-in-python-a-step-by-step-guide-187f
+        #https://pytutorial.com/exploring-different-ways-to-capture-web-page-screenshots-in-python/#google_vignette
+        driver = webdriver.Firefox()
+        driver.get(url)
+        sleep(sleep_time)
+        return driver.get_screenshot_as_png()
