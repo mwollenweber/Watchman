@@ -18,8 +18,10 @@ from Watchman.alerts.email import send_email
 from Watchman.settings import BASE_URL, DEBUG, ENABLE_WEB_SCREENSHOT, I_UNDERSTAND_THIS_IS_DANGEROUS
 from Watchman.enrichments.vt import VT
 
-#
+
+#fail-safe to exit a loop -- should be unnecessary
 MAX_ITERATIONS = 11000000000
+
 
 logger = logging.getLogger(__name__)
 
@@ -32,14 +34,13 @@ def has_website(domain, timeout=3):
         f"http://www.{domain}",
         f"https://www.{domain}",
     ]
-
     for url in try_list:
         try:
             response = requests.get(url, timeout=timeout)
             response.raise_for_status()
             return True
         except Exception as e:
-            logger.warn(f"Unable to fetch {url}")
+            #logger.warn(f"Unable to fetch {url}")
             logger.warn(f"Exception: {e}")
     return False
 
@@ -381,6 +382,7 @@ def build_message(match):
     text = (
         f"*[WATCHMAN ALERT] Imposter Domain Detected at {now}* \n"
         f"Match Detected on: `{domain}`\n"
+        f"Detection Type: {match.search.method}\n"
         f"- Registrar: {registrar}\n"
         f"- Creation Date: {creation_date}\n"
         f"- has_website: {has_website(domain)}\n"

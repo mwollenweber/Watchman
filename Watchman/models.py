@@ -57,54 +57,6 @@ class NewDomain(models.Model):
     def __str__(self):
         return self.domain
 
-
-class Match(models.Model):
-    domain = models.CharField(max_length=255, db_index=True)
-    client = models.ForeignKey(Client, on_delete=models.CASCADE)
-    is_new = models.BooleanField(default=True, blank=True, db_index=True)
-    is_reviewed = models.BooleanField(default=False, blank=True, db_index=True)
-    is_fp = models.BooleanField(default=False, blank=True, db_index=True)
-    is_ignored = models.BooleanField(default=False, blank=True, db_index=True)
-    is_public = models.BooleanField(default=False, blank=True, db_index=True)
-    has_mx = models.BooleanField(default=False, blank=True, db_index=True)
-    has_website = models.BooleanField(default=False, blank=True, db_index=True)
-    created = models.DateTimeField(auto_now_add=True, blank=True)
-    last_modified = models.DateTimeField(auto_now=True, blank=True)
-    has_alerted = models.BooleanField(default=False, db_index=True)
-
-    class Meta:
-        verbose_name = "Match"
-        verbose_name_plural = "Matches"
-
-
-class ZoneList(models.Model):
-    name = models.CharField(max_length=255, primary_key=True)
-    update_interval = models.IntegerField(default=28800, blank=True, null=True)
-    last_updated = models.DateTimeField(
-        blank=True, null=True, default=timezone.now() - timedelta(days=365)
-    )
-    last_completed = models.DateTimeField(
-        blank=True, null=True, default=timezone.now() - timedelta(days=365)
-    )
-    last_diffed = models.DateTimeField(
-        blank=True, null=True, default=timezone.now() - timedelta(days=365)
-    )
-    last_error = models.DateTimeField(
-        blank=True, null=True, default=timezone.now() - timedelta(days=365)
-    )
-    error_message = models.TextField(blank=True, null=True)
-    status = models.CharField(
-        max_length=32, default="unknown", blank=True, null=True, db_index=True
-    )
-    enabled = models.BooleanField(default=True, db_index=True)
-
-    url = models.CharField(max_length=255, blank=True, null=True)
-    list_display = ["name", "last_updated", "update_interval"]
-
-    def __str__(self):
-        return self.name
-
-
 class Search(models.Model):
     SEARCH_METHOD_CHOICES = (
         ("regex", "regex"),
@@ -143,6 +95,57 @@ class Search(models.Model):
     class Meta:
         verbose_name = "Search"
         verbose_name_plural = "Searches"
+
+
+class Match(models.Model):
+    domain = models.CharField(max_length=255, db_index=True)
+    client = models.ForeignKey(Client, on_delete=models.CASCADE)
+    is_new = models.BooleanField(default=True, blank=True, db_index=True)
+    is_reviewed = models.BooleanField(default=False, blank=True, db_index=True)
+    is_fp = models.BooleanField(default=False, blank=True, db_index=True)
+    is_ignored = models.BooleanField(default=False, blank=True, db_index=True)
+    is_public = models.BooleanField(default=False, blank=True, db_index=True)
+    has_mx = models.BooleanField(default=False, blank=True, db_index=True)
+    has_website = models.BooleanField(default=False, blank=True, db_index=True)
+    created = models.DateTimeField(auto_now_add=True, blank=True)
+    last_modified = models.DateTimeField(auto_now=True, blank=True)
+    has_alerted = models.BooleanField(default=False, db_index=True)
+    tlp = models.CharField(max_length=255, db_index=True, default="YELLOW")
+    search = models.ForeignKey(Search, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "Match"
+        verbose_name_plural = "Matches"
+
+
+class ZoneList(models.Model):
+    name = models.CharField(max_length=255, primary_key=True)
+    update_interval = models.IntegerField(default=28800, blank=True, null=True)
+    last_updated = models.DateTimeField(
+        blank=True, null=True, default=timezone.now() - timedelta(days=365)
+    )
+    last_completed = models.DateTimeField(
+        blank=True, null=True, default=timezone.now() - timedelta(days=365)
+    )
+    last_diffed = models.DateTimeField(
+        blank=True, null=True, default=timezone.now() - timedelta(days=365)
+    )
+    last_error = models.DateTimeField(
+        blank=True, null=True, default=timezone.now() - timedelta(days=365)
+    )
+    error_message = models.TextField(blank=True, null=True)
+    status = models.CharField(
+        max_length=32, default="unknown", blank=True, null=True, db_index=True
+    )
+    enabled = models.BooleanField(default=True, db_index=True)
+
+    url = models.CharField(max_length=255, blank=True, null=True)
+    list_display = ["name", "last_updated", "update_interval"]
+
+    def __str__(self):
+        return self.name
+
+
 
 
 class WhoisRecord(models.Model):
