@@ -202,9 +202,11 @@ def run_searches():
                         db_hit, created = Match.objects.get_or_create(
                             domain=h,
                             client=s.client,
+                            search=s,
                             defaults={
                                 "last_modified": timezone.now(),
                             },
+
                         )
                         if created:
                             # Do these enrichments after the record is created so that an error doesn't drop the record

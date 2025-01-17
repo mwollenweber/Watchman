@@ -64,6 +64,7 @@ class Search(models.Model):
         ("strdistance", "strdistance"),
     )
 
+    id = models.AutoField(primary_key=True)
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
     database = models.CharField(
         max_length=255, blank=True, null=True, default="newdomains", db_index=True
@@ -98,6 +99,7 @@ class Search(models.Model):
 
 
 class Match(models.Model):
+    id = models.AutoField(primary_key=True)
     domain = models.CharField(max_length=255, db_index=True)
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
     is_new = models.BooleanField(default=True, blank=True, db_index=True)
