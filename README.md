@@ -35,7 +35,8 @@ http://localhost:8000/admin/Watchman/alertconfig/
 
 ## Other Commands
 ### Update a Specific Zone:
-- python manage.py update_zone <zonename>
+Update a specific TLD. For Example, update .com: 
+- python manage.py update_zone com
 
 
 
@@ -47,3 +48,6 @@ http://localhost:8000/admin/Watchman/alertconfig/
 
 ### Example Slack Alert
 ![Slack Alert](images/slack_alert.png)
+
+### Example Email Alert
+![Email Alert](images/email_alert.png)
