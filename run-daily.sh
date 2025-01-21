@@ -14,4 +14,4 @@ python manage.py update_zone `echo $ENABLED_ZONES`
 python manage.py run_searches
 python manage.py run_alerts
 python manage.py purge_new
-find $script_directory/tmp/*.txt  -mtime +30d  -type f  -exec rm {} \;
+find $script_directory/tmp/*.txt  -mtime +15d  -type f  -exec rm {} \;

@@ -115,6 +115,10 @@ class Match(models.Model):
     tlp = models.CharField(max_length=255, db_index=True, default="YELLOW")
     search = models.ForeignKey(Search, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f"{self.client}: {self.domain}"
+
+
     class Meta:
         verbose_name = "Match"
         verbose_name_plural = "Matches"

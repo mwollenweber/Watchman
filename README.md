@@ -12,12 +12,20 @@ Watchman is a security tool that watches domains and fqdns. You can read more ab
 ### Add a Client
 - http://localhost:8000/admin/Watchman/client/add/
 
+![add a client](images/add_client.png)
+
+
 ### Add a Search
 - http://localhost:8000/admin/Watchman/search/add/
-I add the domain - tld as a substring match and the domain+tld as str distance
+I recommend adding the domain - (minus the) tld as a substring match and the domain+tld as str distance. So for insomniac.tech I monitor for the substring 'insomniac'
+
+![add a search](images/add_search.png)
+
 
 ### Add Alert Config
 http://localhost:8000/admin/Watchman/alertconfig/
+
+![add a alert config](images/add_alertconfig.png)
 
 
 
@@ -33,3 +41,9 @@ http://localhost:8000/admin/Watchman/alertconfig/
 
 ### See Search Results
 - Browse to http://localhost:8000/hits/
+
+![hits](images/hit.png)
+
+
+### Example Slack Alert
+![Slack Alert](images/slack_alert.png)

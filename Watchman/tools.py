@@ -215,7 +215,8 @@ def run_searches():
                             db_hit.save()
 
                     except Exception as e:
-                        logger.error(e)
+                        #logger.error(e)
+                        error = f"{e}"
 
 
 def load_diff(domain_list):

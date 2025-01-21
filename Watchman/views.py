@@ -237,6 +237,7 @@ def hits(request):
             "has_mx": hit.has_mx,
             "has_website": hit.has_website,
             "has_alerted": hit.has_alerted,
+            "search_method": hit.search.method,
             "edit_link": f"{BASE_URL}/admin/Watchman/match/{hit.id}/",
         }
         if enrich:
