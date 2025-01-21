@@ -102,7 +102,7 @@ def zone_status(request):
 @login_required()
 @require_http_methods(["GET"])
 def is_nod(request):
-    value = request.GET.get("value", "example.com")
+    value = request.GET.get("domain", "example.com")
     data = NewDomain.objects.filter(domain__icontains=value).first()
     if data:
         return JsonResponse(

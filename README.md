@@ -51,3 +51,21 @@ Update a specific TLD. For Example, update .com:
 
 ### Example Email Alert
 ![Email Alert](images/email_alert.png)
+
+
+### Public Hits
+http://localhost:8000/api/public_hits
+
+
+### Check if a Domain is a Newly Observed Domain (NOD)
+http://localhost:8000/api/isnod/?domain=insomniac.tech
+
+
+
+### List all Newly Observed Domains (NODs)
+http://localhost:8000/api/newdomains/
+
+
+
+### Run Celery
+TODO
