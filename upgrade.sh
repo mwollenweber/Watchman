@@ -12,5 +12,6 @@ fi
 
 source $script_directory/env/bin/activate
 git pull
-python manage.py makemigrations --merge
+pip install -r requirements.txt
+python manage.py makemigrations
 python manage.py migrate

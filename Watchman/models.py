@@ -57,8 +57,49 @@ class NewDomain(models.Model):
     def __str__(self):
         return self.domain
 
+class Search(models.Model):
+    SEARCH_METHOD_CHOICES = (
+        ("regex", "regex"),
+        ("substring", "substring"),
+        ("strdistance", "strdistance"),
+    )
+
+    id = models.AutoField(primary_key=True)
+    client = models.ForeignKey(Client, on_delete=models.CASCADE)
+    database = models.CharField(
+        max_length=255, blank=True, null=True, default="newdomains", db_index=True
+    )
+    criteria = models.CharField(max_length=255)
+    tolerance = models.IntegerField(default=0, blank=True, null=True)
+    created = models.DateTimeField(auto_now_add=True)
+    last_updated = models.DateTimeField(
+        blank=True, null=True, default=timezone.now() - timedelta(days=365)
+    )
+    last_ran = models.DateTimeField(
+        blank=True, null=True, default=timezone.now() - timedelta(days=365)
+    )
+    update_interval = models.IntegerField(
+        default=1440, blank=True, null=True, db_index=True
+    )  # in minutes
+    is_active = models.BooleanField(default=True, blank=True, db_index=True)
+    last_completed = models.DateTimeField(
+        blank=True, null=True, default=timezone.now() - timedelta(days=365)
+    )
+    is_approved = models.BooleanField(default=True, blank=True, db_index=True)
+    method = models.CharField(max_length=20, choices=SEARCH_METHOD_CHOICES)
+
+    list_display = ["client", "method", "criteria"]
+
+    def __str__(self):
+        return f"{self.client}: {self.method}('{self.criteria}')"
+
+    class Meta:
+        verbose_name = "Search"
+        verbose_name_plural = "Searches"
+
 
 class Match(models.Model):
+    id = models.AutoField(primary_key=True)
     domain = models.CharField(max_length=255, db_index=True)
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
     is_new = models.BooleanField(default=True, blank=True, db_index=True)
@@ -71,6 +112,12 @@ class Match(models.Model):
     created = models.DateTimeField(auto_now_add=True, blank=True)
     last_modified = models.DateTimeField(auto_now=True, blank=True)
     has_alerted = models.BooleanField(default=False, db_index=True)
+    tlp = models.CharField(max_length=255, db_index=True, default="YELLOW")
+    search = models.ForeignKey(Search, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.client}: {self.domain}"
+
 
     class Meta:
         verbose_name = "Match"
@@ -105,44 +152,6 @@ class ZoneList(models.Model):
         return self.name
 
 
-class Search(models.Model):
-    SEARCH_METHOD_CHOICES = (
-        ("regex", "regex"),
-        ("substring", "substring"),
-        ("strdistance", "strdistance"),
-    )
-
-    client = models.ForeignKey(Client, on_delete=models.CASCADE)
-    database = models.CharField(
-        max_length=255, blank=True, null=True, default="newdomains", db_index=True
-    )
-    criteria = models.CharField(max_length=255)
-    tolerance = models.IntegerField(default=0, blank=True, null=True)
-    created = models.DateTimeField(auto_now_add=True)
-    last_updated = models.DateTimeField(
-        blank=True, null=True, default=timezone.now() - timedelta(days=365)
-    )
-    last_ran = models.DateTimeField(
-        blank=True, null=True, default=timezone.now() - timedelta(days=365)
-    )
-    update_interval = models.IntegerField(
-        default=1440, blank=True, null=True, db_index=True
-    )  # in minutes
-    is_active = models.BooleanField(default=True, blank=True, db_index=True)
-    last_completed = models.DateTimeField(
-        blank=True, null=True, default=timezone.now() - timedelta(days=365)
-    )
-    is_approved = models.BooleanField(default=True, blank=True, db_index=True)
-    method = models.CharField(max_length=20, choices=SEARCH_METHOD_CHOICES)
-
-    list_display = ["client", "method", "criteria"]
-
-    def __str__(self):
-        return f"{self.client}: {self.method}('{self.criteria}')"
-
-    class Meta:
-        verbose_name = "Search"
-        verbose_name_plural = "Searches"
 
 
 class WhoisRecord(models.Model):

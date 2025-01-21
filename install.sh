@@ -1,9 +1,11 @@
 #!/bin/bash
 
 
+script_directory=$(dirname $(readlink -f $BASH_SOURCE))
+source $script_directory/config.rc
+
 # For OSX development
 if [[ `uname` == "Darwin" ]]; then
-    script_directory=$(dirname "$0")
 
     brew update
     echo "Installing Postgres"
@@ -14,7 +16,6 @@ if [[ `uname` == "Darwin" ]]; then
     brew services start redis
 
 else
-    script_directory=$(dirname $(readlink -f $BASH_SOURCE))
 
     sudo apt-get update
     sudo apt-get install screen git gh python3 virtualenv postgresql-all redis
@@ -22,7 +23,7 @@ else
     sudo service redis start
 fi
 
-source $script_directory/config.rc
+
 sudo -u postgres createdb $DBNAME
 sudo -u postgres psql -c "CREATE USER $DBUSER WITH ENCRYPTED PASSWORD '$DBPASSWORD';"
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DBNAME to $DBUSER;"
