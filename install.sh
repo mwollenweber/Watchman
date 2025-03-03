@@ -3,8 +3,7 @@
 source ./config.rc
 
 # For OSX development
-if [[ `uname` == "Darwin" ]]; then
-
+if [[ `uname` == "Darwin" ]]; the
     brew update
     echo "Installing Postgres"
     brew install postgresql
@@ -12,15 +11,12 @@ if [[ `uname` == "Darwin" ]]; then
     echo "Installing Redis"
     brew install redis
     brew services start redis
-
 else
-
     sudo apt update
     sudo apt install screen git gh python3 virtualenv postgresql-all redis
     sudo service postgresql start
     sudo service redis start
 fi
-
 
 sudo -u postgres createdb $DBNAME
 sudo -u postgres psql -c "CREATE USER $DBUSER WITH ENCRYPTED PASSWORD '$DBPASSWORD';"
@@ -35,4 +31,7 @@ python manage.py makemigrations
 python manage.py migrate
 python manage.py init_zones
 python manage.py enable_zone `echo $ENABLED_ZONES`
+echo "Create a Super User"
 python manage.py createsuperuser
+echo "Install Complete"
+echo "To run a daily update launch ./run-daily.sh"

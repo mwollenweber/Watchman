@@ -1,15 +1,5 @@
 #!/bin/bash
 
-
-script_directory=$(dirname $(readlink -f $BASH_SOURCE))
-
-
-if [ -e $script_directory/config.rc ]
-then
-	source $script_directory/config.rc
-else
-	echo "WARN: $script_directory/config.rc does not exist."
-fi
-
-source $script_directory/env/bin/activate
+source config.rc
+source ./env/bin/activate
 python manage.py runserver
