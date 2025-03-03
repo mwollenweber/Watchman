@@ -3,7 +3,7 @@
 source ./config.rc
 
 # For OSX development
-if [[ `uname` == "Darwin" ]]; the
+if [[ `uname` == "Darwin" ]]; then
     brew update
     echo "Installing Postgres"
     brew install postgresql
