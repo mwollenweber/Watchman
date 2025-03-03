@@ -1,8 +1,6 @@
 #!/bin/bash
 
-
-script_directory=$(dirname $(readlink -f $BASH_SOURCE))
-source $script_directory/config.rc
+source ./config.rc
 
 # For OSX development
 if [[ `uname` == "Darwin" ]]; then
@@ -17,8 +15,8 @@ if [[ `uname` == "Darwin" ]]; then
 
 else
 
-    sudo apt-get update
-    sudo apt-get install screen git gh python3 virtualenv postgresql-all redis
+    sudo apt update
+    sudo apt install screen git gh python3 virtualenv postgresql-all redis
     sudo service postgresql start
     sudo service redis start
 fi
@@ -29,7 +27,7 @@ sudo -u postgres psql -c "CREATE USER $DBUSER WITH ENCRYPTED PASSWORD '$DBPASSWO
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DBNAME to $DBUSER;"
 sudo -u postgres psql -c "ALTER DATABASE $DBNAME OWNER TO $DBUSER;"
 
-mkdir $script_directory/tmp
+mkdir ./tmp
 virtualenv env
 source env/bin/activate
 pip install -r requirements.txt
