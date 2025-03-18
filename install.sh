@@ -11,17 +11,25 @@ if [[ `uname` == "Darwin" ]]; then
     echo "Installing Redis"
     brew install redis
     brew services start redis
+
+    createdb $DBNAME
+    psql $DBNAME -c  "CREATE USER $DBUSER WITH ENCRYPTED PASSWORD '$DBPASSWORD';"
+    psql $DBNAME -c "GRANT ALL PRIVILEGES ON DATABASE $DBNAME to $DBUSER;"
+    psql $DBNAME -c "ALTER DATABASE $DBNAME OWNER TO $DBUSER;"
+
 else
     sudo apt update
     sudo apt install screen git gh python3 virtualenv postgresql-all redis
     sudo service postgresql start
     sudo service redis start
+
+    sudo -u postgres createdb $DBNAME
+    sudo -u postgres psql -c "CREATE USER $DBUSER WITH ENCRYPTED PASSWORD '$DBPASSWORD';"
+    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DBNAME to $DBUSER;"
+    sudo -u postgres psql -c "ALTER DATABASE $DBNAME OWNER TO $DBUSER;"
+
 fi
 
-sudo -u postgres createdb $DBNAME
-sudo -u postgres psql -c "CREATE USER $DBUSER WITH ENCRYPTED PASSWORD '$DBPASSWORD';"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DBNAME to $DBUSER;"
-sudo -u postgres psql -c "ALTER DATABASE $DBNAME OWNER TO $DBUSER;"
 
 mkdir ./tmp
 virtualenv env
