@@ -15,16 +15,20 @@ from selenium import webdriver
 from Watchman.models import Domain, NewDomain, Match, Search, AlertConfig
 from Watchman.alerts.slackAlert import sendSlackMessage, sendSlackWebhook
 from Watchman.alerts.email import send_email
-from Watchman.settings import BASE_URL, DEBUG, ENABLE_WEB_SCREENSHOT, I_UNDERSTAND_THIS_IS_DANGEROUS
+from Watchman.settings import (
+    BASE_URL,
+    DEBUG,
+    ENABLE_WEB_SCREENSHOT,
+    I_UNDERSTAND_THIS_IS_DANGEROUS,
+)
 from Watchman.enrichments.vt import VT
 
 
-#fail-safe to exit a loop -- should be unnecessary
+# fail-safe to exit a loop -- should be unnecessary
 MAX_ITERATIONS = 11000000000
 
 
 logger = logging.getLogger(__name__)
-
 
 
 def has_website(domain, timeout=3):
@@ -40,7 +44,7 @@ def has_website(domain, timeout=3):
             response.raise_for_status()
             return True
         except Exception as e:
-            #logger.warn(f"Unable to fetch {url}")
+            # logger.warn(f"Unable to fetch {url}")
             logger.warn(f"Exception: {e}")
     return False
 
@@ -206,7 +210,6 @@ def run_searches():
                             defaults={
                                 "last_modified": timezone.now(),
                             },
-
                         )
                         if created:
                             # Do these enrichments after the record is created so that an error doesn't drop the record
@@ -215,7 +218,7 @@ def run_searches():
                             db_hit.save()
 
                     except Exception as e:
-                        #logger.error(e)
+                        # logger.error(e)
                         error = f"{e}"
 
 
@@ -232,10 +235,10 @@ def load_diff(domain_list):
                 d.save()
             NewDomain.objects.create(domain=domain, tld=tld)
         except ValueError as e:
+            logging.debug(e, exc_info=True)
             continue
-
         except IntegrityError as e:
-            # logging.debug(e, exc_info=True)
+            logging.debug(e, exc_info=True)
             continue
 
 
@@ -436,10 +439,10 @@ def run_alerts():
 def screenshot_url(url, sleep_time=1):
     if ENABLE_WEB_SCREENSHOT and I_UNDERSTAND_THIS_IS_DANGEROUS:
         logging.warning("Screenshots are dangerous. Don't do this")
-        #fixme #this is unsafe
-        #selenium is nice but we need ephmeral instance2
-        #https://dev.to/shadow_b/capturing-full-webpage-screenshots-with-selenium-in-python-a-step-by-step-guide-187f
-        #https://pytutorial.com/exploring-different-ways-to-capture-web-page-screenshots-in-python/#google_vignette
+        # fixme #this is unsafe
+        # selenium is nice but we need ephmeral instance2
+        # https://dev.to/shadow_b/capturing-full-webpage-screenshots-with-selenium-in-python-a-step-by-step-guide-187f
+        # https://pytutorial.com/exploring-different-ways-to-capture-web-page-screenshots-in-python/#google_vignette
         driver = webdriver.Firefox()
         driver.get(url)
         sleep(sleep_time)
