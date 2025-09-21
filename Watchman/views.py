@@ -113,7 +113,6 @@ def is_nod(request):
                 "found": True,
                 "is_nod": True,
                 "created": data.created,
-
             }
         )
     else:
@@ -143,7 +142,7 @@ def search(request):
         data = NewDomain.objects.filter(domain__icontains=value).all()
         for d in data:
             results.append(d.to_dict())
-    #fixme we're not doing a domain table
+    # fixme we're not doing a domain table
     elif search_type == "domain":
         data = Domain.objects.filter(domain__icontains=value).all()
         for d in data:

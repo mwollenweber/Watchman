@@ -40,7 +40,10 @@ def update_zonefile(zone):
     link = f"https://czds-download-api.icann.org/czds/downloads/{zone}.zone"
     filename = f"{settings.TEMP_DIR}/{timezone.now():%Y%m%d}-{zone}.txt"
 
-    zone_list = myicann.download_one_zone(link)
+    zone_data = myicann.download_one_zone(link)
+    zone_list = zonefile2list(zone_data)
+
+    # fixme -- lets put this in S3
     outfile = open(filename, "w")
     for line in zone_list:
         outfile.write(f"{line}\n")
@@ -161,15 +164,15 @@ class CZDS:
 
         logger.info(f"Done downloading {url}")
         logger.debug("Decompressing zonefile")
-        data = io.BytesIO(gzip.decompress(f.getbuffer()))
-        return zonefile2list(data)
+        return io.BytesIO(gzip.decompress(f.getbuffer()))
 
     def load_zonefile(self, zone):
         if not self.is_authenticated:
             self.authenticate()
 
         link = f"https://czds-download-api.icann.org/czds/downloads/{zone}.zone"
-        for domain in self.download_one_zone(link):
+        zone_data = self.download_one_zone(link)
+        for domain in zonefile2list(zone_data):
             try:
                 name, tld = domain.split(".")
                 d = Domain.objects.create(domain=domain, tld=tld, is_new=True)

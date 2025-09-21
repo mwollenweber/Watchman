@@ -57,6 +57,7 @@ class NewDomain(models.Model):
     def __str__(self):
         return self.domain
 
+
 class Search(models.Model):
     SEARCH_METHOD_CHOICES = (
         ("regex", "regex"),
@@ -118,7 +119,6 @@ class Match(models.Model):
     def __str__(self):
         return f"{self.client}: {self.domain}"
 
-
     class Meta:
         verbose_name = "Match"
         verbose_name_plural = "Matches"
@@ -150,8 +150,6 @@ class ZoneList(models.Model):
 
     def __str__(self):
         return self.name
-
-
 
 
 class WhoisRecord(models.Model):
