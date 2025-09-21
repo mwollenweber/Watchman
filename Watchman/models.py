@@ -265,3 +265,27 @@ class WatchResult(models.Model):
     is_new = models.BooleanField(default=True, blank=True, db_index=True)
     is_reviewed = models.BooleanField(default=False, blank=True, db_index=True)
     is_fp = models.BooleanField(default=False, blank=True, db_index=True)
+
+
+class ZoneFiles(models.Model):
+    models.AutoField(primary_key=True)
+    zone = models.CharField(max_length=255, db_index=True)
+    bucket_name = models.CharField(max_length=255, db_index=True)
+    object_name = models.CharField(max_length=255, db_index=True)
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
+
+
+class DomainLists(models.Model):
+    models.AutoField(primary_key=True)
+    zone = models.CharField(max_length=255, db_index=True)
+    bucket_name = models.CharField(max_length=255, db_index=True)
+    object_name = models.CharField(max_length=255, db_index=True)
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
+
+
+class NewDomainLists(models.Model):
+    models.AutoField(primary_key=True)
+    zone = models.CharField(max_length=255, db_index=True)
+    bucket_name = models.CharField(max_length=255, db_index=True)
+    object_name = models.CharField(max_length=255, db_index=True)
+    created = models.DateTimeField(auto_now_add=True, db_index=True)

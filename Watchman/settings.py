@@ -30,6 +30,10 @@ ICANN_USERNAME = os.getenv("ICANN_USERNAME") or warn(
 ICANN_PASSWORD = os.getenv("ICANN_PASSWORD") or warn(
     "No ICANN Password set in environment variable ICANN_PASSWORD"
 )
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID") or warn("No AWS Access Key ID set in environment variable")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY") or warn('No AWS Secret Access Key set in environment variable')
+AWS_REGION_NAME = os.getenv("REGION_NAME") or "us-east-1"
+
 BATCH_SIZE = os.getenv("BATCH_SIZE") or 50000
 MIN_ZONE_TIME = os.getenv("MIN_ZONE_TIME") or 14400  # seconds
 ZONE_UPDATE_INTERVAL = os.getenv("ZONE_UPDATE_INTERVAL") or 600.0  # seconds
