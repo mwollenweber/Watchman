@@ -41,26 +41,12 @@ def update_zonefile(zone):
     zone_list = zonefile2list(zone_data)
     zone_list.sort()
 
-    # fixme -- lets put this in S3
-    # outfile = open(filename, "w")
-    # for line in zone_list:
-    #     outfile.write(f"{line}\n")
-    #     count += 1
-    #     if count % 10000 == 0:
-    #         logger.debug(f"{count} domains written to {filename}")
-    data =  io.StringIO()
-    # data = io.BytesIO()
-    # for line in zone_list:
-    #     data.write(f'{line}\n')
-
     S3 = boto3.client("s3",
                       region_name=settings.AWS_REGION_NAME,
                       aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
                       aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
-    #S3.upload_fileobj(Fileobj=data, Bucket="domainlists", Key=filename)
     S3.put_object(Body="\n".join(zone_list), Bucket="domainlists", Key=filename)
-    # DomainLists.objects.create(zone=zone, bucket_name="domainlists", object_name=filename)
-
+    DomainLists.objects.create(zone=zone, bucket_name="domainlists", object_name=filename)
 
 
 class CZDS:

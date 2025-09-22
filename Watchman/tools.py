@@ -77,7 +77,6 @@ def get_mx(domain):
         mx_records.append(x.to_text())
 
     # todo check VT and add any records
-
     return mx_records
 
 
@@ -242,6 +241,7 @@ def load_diff(domain_list):
             continue
 
 
+#fixme
 def getZonefiles(zone):
     logger.info("Getting zone files for %s", zone)
     modified_files = glob.glob(f"{settings.TEMP_DIR}/*-{zone}.txt")
