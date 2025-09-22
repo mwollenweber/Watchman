@@ -30,8 +30,12 @@ ICANN_USERNAME = os.getenv("ICANN_USERNAME") or warn(
 ICANN_PASSWORD = os.getenv("ICANN_PASSWORD") or warn(
     "No ICANN Password set in environment variable ICANN_PASSWORD"
 )
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID") or warn("No AWS Access Key ID set in environment variable")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY") or warn('No AWS Secret Access Key set in environment variable')
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID") or warn(
+    "No AWS Access Key ID set in environment variable"
+)
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY") or warn(
+    "No AWS Secret Access Key set in environment variable"
+)
 AWS_REGION_NAME = os.getenv("REGION_NAME") or "us-east-1"
 
 BATCH_SIZE = os.getenv("BATCH_SIZE") or 50000
@@ -62,7 +66,6 @@ SECRET_KEY = "django-insecure-s9n)tio7xscb%r4s_1v^rptbj*bb@ycm18(_@=%#mla#u#tut2
 
 
 ALLOWED_HOSTS = [
-    ".herokuapp.com",
     "localhost",
     "127.0.0.1",
     "watchman-dev.insomniac.tech",

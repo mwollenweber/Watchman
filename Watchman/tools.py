@@ -5,6 +5,9 @@ import os
 import dns.resolver
 import socket
 import requests
+import boto3
+import io
+from tempfile import NamedTemporaryFile
 from time import time, sleep
 from django.db import IntegrityError
 from django.conf import settings
@@ -12,14 +15,16 @@ from Levenshtein import distance
 from django.utils import timezone
 from datetime import timedelta, datetime
 from selenium import webdriver
-from Watchman.models import Domain, NewDomain, Match, Search, AlertConfig
+from Watchman.models import Domain, NewDomain, Match, Search, AlertConfig, DomainLists
 from Watchman.alerts.slackAlert import sendSlackMessage, sendSlackWebhook
 from Watchman.alerts.email import send_email
 from Watchman.settings import (
     BASE_URL,
-    DEBUG,
     ENABLE_WEB_SCREENSHOT,
     I_UNDERSTAND_THIS_IS_DANGEROUS,
+    AWS_ACCESS_KEY_ID,
+    AWS_SECRET_ACCESS_KEY,
+    AWS_REGION_NAME,
 )
 from Watchman.enrichments.vt import VT
 
@@ -133,9 +138,8 @@ def diff_zone(zone):
         zone.save()
 
         oldfile, newfile = getZonefiles(zone.name)
-        old = open(oldfile, "r")
-        new = open(newfile, "r")
-        domain_list = diff_files(old, new)
+        domain_list = diff_files(oldfile, newfile)
+
         load_diff(domain_list)
 
         zone.status = "good"
@@ -145,14 +149,6 @@ def diff_zone(zone):
         zone.last_diffed = now
         zone.save()
         logger.info(f"DONE zone={zone.name}")
-
-    except FileNotFoundError as e:
-        logger.error(e)
-        zone.last_error = timezone.now()
-        zone.error_message = f"{e}"
-        zone.status = "error"
-        zone.save()
-        return
 
     except Exception as e:
         logger.error(e)
@@ -224,6 +220,7 @@ def run_searches():
 def load_diff(domain_list):
     for domain in domain_list:
         try:
+            domain = str(domain)
             name, tld = domain.split(".")
             if settings.MAINTAIN_FULL_ZONEFILES:
                 d = Domain.objects.create(
@@ -233,31 +230,35 @@ def load_diff(domain_list):
                 )
                 d.save()
             NewDomain.objects.create(domain=domain, tld=tld)
-        except ValueError as e:
-            logging.debug(e, exc_info=True)
-            continue
-        except IntegrityError as e:
+        except (ValueError, IntegrityError) as e:
             logging.debug(e, exc_info=True)
             continue
 
 
-#fixme
+# return old, new
 def getZonefiles(zone):
     logger.info("Getting zone files for %s", zone)
-    modified_files = glob.glob(f"{settings.TEMP_DIR}/*-{zone}.txt")
-    modified_files.sort(key=lambda x: os.path.getmtime(x))
-    if len(modified_files) == 0:
-        logger.error(f"No zone files for {zone}")
-        return
-    if len(modified_files) < 2:
-        logger.warn(f"Only one zone file for {zone}")
-        return modified_files[0], modified_files[-1]
-    # fixme probably don't need/want this
-    if DEBUG:
-        logger.info(f"DEBUG DIFFING: {modified_files[0]} {modified_files[-1]}")
-        return modified_files[0], modified_files[-1]
-    logger.info(f"DIFFING: {modified_files[-2]} {modified_files[-1]}")
-    return modified_files[-2], modified_files[-1]
+    S3 = boto3.client(
+        "s3",
+        region_name=AWS_REGION_NAME,
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    )
+    results = DomainLists.objects.filter(zone=zone).order_by("-id")[:2]
+    zone_count = DomainLists.objects.filter(zone=zone).count()
+
+    if zone_count == 0:
+        logger.warn("No Zonefiles -- can't diff")
+        return io.BytesIO(), io.BytesIO()
+    if zone_count == 1:
+        logger.warn("Only one Zonefile -- can't diff")
+        current = S3.get_object(
+            Bucket=results[0].bucket_name, Key=results[0].object_name
+        )
+        return io.BytesIO(), io.BytesIO(current["Body"].read())
+    current = S3.get_object(Bucket=results[0].bucket_name, Key=results[0].object_name)
+    last = S3.get_object(Bucket=results[1].bucket_name, Key=results[1].object_name)
+    return io.BytesIO(last["Body"].read()), io.BytesIO(current["Body"].read())
 
 
 def diff_lists(oldlist, newlist):

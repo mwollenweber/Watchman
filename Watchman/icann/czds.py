@@ -41,12 +41,16 @@ def update_zonefile(zone):
     zone_list = zonefile2list(zone_data)
     zone_list.sort()
 
-    S3 = boto3.client("s3",
-                      region_name=settings.AWS_REGION_NAME,
-                      aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                      aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
+    S3 = boto3.client(
+        "s3",
+        region_name=settings.AWS_REGION_NAME,
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+    )
     S3.put_object(Body="\n".join(zone_list), Bucket="domainlists", Key=filename)
-    DomainLists.objects.create(zone=zone, bucket_name="domainlists", object_name=filename)
+    DomainLists.objects.create(
+        zone=zone, bucket_name="domainlists", object_name=filename
+    )
 
 
 class CZDS:
