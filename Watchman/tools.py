@@ -21,10 +21,10 @@ from Watchman.alerts.email import send_email
 from Watchman.settings import (
     BASE_URL,
     ENABLE_WEB_SCREENSHOT,
-    I_UNDERSTAND_THIS_IS_DANGEROUS,
     AWS_ACCESS_KEY_ID,
     AWS_SECRET_ACCESS_KEY,
     AWS_REGION_NAME,
+    I_UNDERSTAND_THIS_IS_DANGEROUS,
 )
 from Watchman.enrichments.vt import VT
 
@@ -139,9 +139,11 @@ def diff_zone(zone):
 
         oldfile, newfile = getZonefiles(zone.name)
         domain_list = diff_files(oldfile, newfile)
-
-        load_diff(domain_list)
-
+        logger.info("converting list to strings")
+        domain_list = [byte.decode("utf-8") for byte in domain_list]
+        logger.info("about to diff")
+        load_diff(domain_list, zone=zone, use_s3=True)
+        logger.info("done diffing. settings status good")
         zone.status = "good"
         now = timezone.now()
         zone.last_updated = now
@@ -217,22 +219,29 @@ def run_searches():
                         error = f"{e}"
 
 
-def load_diff(domain_list):
+# fixme output to s3
+def load_diff(domain_list, zone, use_s3=True):
+    logger.info(f"Diffing {zone.name} with {len(domain_list)} domains")
     for domain in domain_list:
         try:
-            domain = str(domain)
-            name, tld = domain.split(".")
-            if settings.MAINTAIN_FULL_ZONEFILES:
-                d = Domain.objects.create(
-                    domain=domain,
-                    tld=tld,
-                    is_new=True,
-                )
-                d.save()
-            NewDomain.objects.create(domain=domain, tld=tld)
+            NewDomain.objects.create(domain=domain, tld=zone)
         except (ValueError, IntegrityError) as e:
             logging.debug(e, exc_info=True)
             continue
+
+    if use_s3:
+        logger.info(f"Uploading {len(domain_list)} domains to S3")
+        S3 = boto3.client(
+            "s3",
+            region_name=AWS_REGION_NAME,
+            aws_access_key_id=AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+        )
+
+        filename = f"{timezone.now():%Y%m%d}-{zone}.txt"
+        S3.put_object(
+            Body="\n".join(domain_list), Bucket="newdomainlists", Key=filename
+        )
 
 
 # return old, new
@@ -251,7 +260,7 @@ def getZonefiles(zone):
         logger.warn("No Zonefiles -- can't diff")
         return io.BytesIO(), io.BytesIO()
     if zone_count == 1:
-        logger.warn("Only one Zonefile -- can't diff")
+        logger.warn("Only one Zonefile -- today's zone is the diff!")
         current = S3.get_object(
             Bucket=results[0].bucket_name, Key=results[0].object_name
         )
