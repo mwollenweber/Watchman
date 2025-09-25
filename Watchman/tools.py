@@ -25,6 +25,7 @@ from Watchman.settings import (
     AWS_SECRET_ACCESS_KEY,
     AWS_REGION_NAME,
     I_UNDERSTAND_THIS_IS_DANGEROUS,
+    NEWDOMAIN_BUCKET_NAME,
 )
 from Watchman.enrichments.vt import VT
 
@@ -245,7 +246,7 @@ def load_diff(domain_list, zone, use_s3=True):
 
         filename = f"{timezone.now():%Y%m%d}-{zone}.txt"
         S3.put_object(
-            Body="\n".join(domain_list), Bucket="newdomainlists", Key=filename
+            Body="\n".join(domain_list), Bucket=NEWDOMAIN_BUCKET_NAME, Key=filename
         )
 
 

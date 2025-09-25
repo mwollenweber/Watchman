@@ -47,9 +47,9 @@ def update_zonefile(zone):
         aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
         aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
     )
-    S3.put_object(Body="\n".join(zone_list), Bucket="domainlists", Key=filename)
+    S3.put_object(Body="\n".join(zone_list), Bucket=settings.DOMAIN_BUCKET_NAME, Key=filename)
     DomainLists.objects.create(
-        zone=zone, bucket_name="domainlists", object_name=filename
+        zone=zone, bucket_name=settings.DOMAIN_BUCKET_NAME, object_name=filename
     )
 
 
