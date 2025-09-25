@@ -228,7 +228,7 @@ def load_diff(domain_list, zone, use_s3=True):
             NewDomain.objects.create(domain=domain, tld=zone)
             count += 1
             if count % 10000 == 0:
-                logger.info(f"count={count} of {len(domain_list)}")
+                logger.info(f"count: {count} of {len(domain_list)} *{zone}* domains")
 
         except (ValueError, IntegrityError) as e:
             #logging.debug(e, exc_info=True)
