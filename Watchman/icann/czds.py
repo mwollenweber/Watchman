@@ -41,7 +41,7 @@ def update_zonefile(zone):
     zone_list = zonefile2list(zone_data)
     zone_list.sort()
 
-    if len(zone_list) > MIN_DOMAIN_LIST_LENGTH:
+    if len(zone_list) > settings.MIN_DOMAIN_LIST_LENGTH:
         S3 = boto3.client(
             "s3",
             region_name=settings.AWS_REGION_NAME,
