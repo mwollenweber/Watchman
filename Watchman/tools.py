@@ -262,15 +262,10 @@ def getZonefiles(zone):
     results = DomainLists.objects.filter(zone=zone).order_by("-id")[:2]
     zone_count = DomainLists.objects.filter(zone=zone).count()
 
-    if zone_count == 0:
-        logger.warn("No Zonefiles -- can't diff")
+    if zone_count < 2:
+        #if there aren't at least two zone lists, we can't generate a diff
         return io.BytesIO(), io.BytesIO()
-    if zone_count == 1:
-        logger.warn("Only one Zonefile -- today's zone is the diff!")
-        current = S3.get_object(
-            Bucket=results[0].bucket_name, Key=results[0].object_name
-        )
-        return io.BytesIO(), io.BytesIO(current["Body"].read())
+
     current = S3.get_object(Bucket=results[0].bucket_name, Key=results[0].object_name)
     last = S3.get_object(Bucket=results[1].bucket_name, Key=results[1].object_name)
     return io.BytesIO(last["Body"].read()), io.BytesIO(current["Body"].read())
