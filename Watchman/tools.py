@@ -219,17 +219,22 @@ def run_searches():
                         error = f"{e}"
 
 
-# fixme output to s3
 def load_diff(domain_list, zone, use_s3=True):
     logger.info(f"Diffing {zone.name} with {len(domain_list)} domains")
+    count = 0
     for domain in domain_list:
         try:
             NewDomain.objects.create(domain=domain, tld=zone)
+            count += 1
+            if count % 10000 == 0:
+                logger.info(f"count={count} of {len(domain_list)}")
+
         except (ValueError, IntegrityError) as e:
             logging.debug(e, exc_info=True)
             continue
 
     if use_s3:
+        #write the new domains to an S3 bucket
         logger.info(f"Uploading {len(domain_list)} domains to S3")
         S3 = boto3.client(
             "s3",
@@ -244,7 +249,7 @@ def load_diff(domain_list, zone, use_s3=True):
         )
 
 
-# return old, new
+# Get the two most recent zonfiles of type=zone from S3
 def getZonefiles(zone):
     logger.info("Getting zone files for %s", zone)
     S3 = boto3.client(
@@ -283,6 +288,7 @@ def memory_diff_files(old_file, new_file):
         logging.error(e, exc_info=True)
 
 
+#diff two sorted files
 def diff_files(old_file, new_file):
     count = 0
     new_list = []

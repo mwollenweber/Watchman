@@ -45,7 +45,9 @@ MIN_UPDATE_INTERVAL = os.getenv("MIN_UPDATE_INTERVAL") or 600.0
 MATCH_UPDATE_INTERVAL = os.getenv("MATCH_UPDATE_INTERVAL") or 600.0
 MAX_NEW_AGE = os.getenv("MAX_NEW_AGE") or 400  # days
 MAX_TEMP_AGE = os.getenv("MAX_TEMP_AGE") or 31  # days
-MAINTAIN_FULL_ZONEFILES = os.getenv("MAINTAIN_FULL_ZONEFILES") or False
+DOMAIN_BUCKET_NAME = os.getenv("DOMAIN_BUCKET_NAME") or "domainlists"
+NEWDOMAIN_BUCKET_NAME = os.getenv("NEWDOMAIN_BUCKET_NAME") or "newdomainlists"
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
