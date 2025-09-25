@@ -15,7 +15,7 @@ from Levenshtein import distance
 from django.utils import timezone
 from datetime import timedelta, datetime
 from selenium import webdriver
-from Watchman.models import Domain, NewDomain, Match, Search, AlertConfig, DomainLists
+from Watchman.models import NewDomain, Match, Search, AlertConfig, DomainLists
 from Watchman.alerts.slackAlert import sendSlackMessage, sendSlackWebhook
 from Watchman.alerts.email import send_email
 from Watchman.settings import (
@@ -26,7 +26,7 @@ from Watchman.settings import (
     AWS_REGION_NAME,
     I_UNDERSTAND_THIS_IS_DANGEROUS,
     NEWDOMAIN_BUCKET_NAME,
-    MIN_DOMAIN_LIST_LENGTH
+    MIN_DOMAIN_LIST_LENGTH,
 )
 from Watchman.enrichments.vt import VT
 
@@ -221,7 +221,7 @@ def run_searches():
                         error = f"{e}"
 
 
-def load_diff(domain_list, zone, use_s3=True):
+def load_diff(domain_list, zone):
     logger.info(f"Diffing {zone.name} with {len(domain_list)} domains")
     count = 0
     for domain in domain_list:
@@ -232,11 +232,11 @@ def load_diff(domain_list, zone, use_s3=True):
                 logger.info(f"count: {count} of {len(domain_list)} *{zone}* domains")
 
         except (ValueError, IntegrityError) as e:
-            #logging.debug(e, exc_info=True)
+            # logging.debug(e, exc_info=True)
             continue
 
-    if use_s3 and len(domain_list) > MIN_DOMAIN_LIST_LENGTH:
-        #write the new domains to an S3 bucket
+    if len(domain_list) > MIN_DOMAIN_LIST_LENGTH:
+        # write the new domains to an S3 bucket
         logger.info(f"Uploading {len(domain_list)} domains to S3")
         S3 = boto3.client(
             "s3",
@@ -261,10 +261,10 @@ def getZonefiles(zone):
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
     )
     results = DomainLists.objects.filter(zone=zone).order_by("-id")[:2]
-    #zone_count = DomainLists.objects.filter(zone=zone).count()
+    # zone_count = DomainLists.objects.filter(zone=zone).count()
 
     if len(results) < 2:
-        #if there aren't at least two zone lists, we can't generate a diff
+        # if there aren't at least two zone lists, we can't generate a diff
         logger.info("Not enough zonefiles to diff")
         return io.BytesIO(), io.BytesIO()
 
@@ -286,7 +286,7 @@ def memory_diff_files(old_file, new_file):
         logging.error(e, exc_info=True)
 
 
-#diff two sorted files
+# diff two sorted files
 def diff_files(old_file, new_file):
     count = 0
     new_list = []
