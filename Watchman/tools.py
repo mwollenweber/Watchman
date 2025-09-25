@@ -26,6 +26,7 @@ from Watchman.settings import (
     AWS_REGION_NAME,
     I_UNDERSTAND_THIS_IS_DANGEROUS,
     NEWDOMAIN_BUCKET_NAME,
+    MIN_DOMAIN_LIST_LENGTH
 )
 from Watchman.enrichments.vt import VT
 
@@ -234,7 +235,7 @@ def load_diff(domain_list, zone, use_s3=True):
             #logging.debug(e, exc_info=True)
             continue
 
-    if use_s3:
+    if use_s3 and len(domain_list) > MIN_DOMAIN_LIST_LENGTH:
         #write the new domains to an S3 bucket
         logger.info(f"Uploading {len(domain_list)} domains to S3")
         S3 = boto3.client(
@@ -260,10 +261,11 @@ def getZonefiles(zone):
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
     )
     results = DomainLists.objects.filter(zone=zone).order_by("-id")[:2]
-    zone_count = DomainLists.objects.filter(zone=zone).count()
+    #zone_count = DomainLists.objects.filter(zone=zone).count()
 
-    if zone_count < 2:
+    if len(results) < 2:
         #if there aren't at least two zone lists, we can't generate a diff
+        logger.info("Not enough zonefiles to diff")
         return io.BytesIO(), io.BytesIO()
 
     current = S3.get_object(Bucket=results[0].bucket_name, Key=results[0].object_name)

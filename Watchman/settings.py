@@ -47,6 +47,7 @@ MAX_NEW_AGE = os.getenv("MAX_NEW_AGE") or 400  # days
 MAX_TEMP_AGE = os.getenv("MAX_TEMP_AGE") or 31  # days
 DOMAIN_BUCKET_NAME = os.getenv("DOMAIN_BUCKET_NAME") or "domainlists"
 NEWDOMAIN_BUCKET_NAME = os.getenv("NEWDOMAIN_BUCKET_NAME") or "newdomainlists"
+MIN_DOMAIN_LIST_LENGTH = os.getenv("MIN_DOMAIN_LIST_LENGTH") or 10
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
