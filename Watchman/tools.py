@@ -144,7 +144,7 @@ def diff_zone(zone):
         logger.info("converting list to strings")
         domain_list = [byte.decode("utf-8") for byte in domain_list]
         logger.info("about to diff")
-        load_diff(domain_list, zone=zone, use_s3=True)
+        load_diff(domain_list, zone=zone)
         logger.info("done diffing. settings status good")
         zone.status = "good"
         now = timezone.now()
