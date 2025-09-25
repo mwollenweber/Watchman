@@ -231,7 +231,7 @@ def load_diff(domain_list, zone, use_s3=True):
                 logger.info(f"count={count} of {len(domain_list)}")
 
         except (ValueError, IntegrityError) as e:
-            logging.debug(e, exc_info=True)
+            #logging.debug(e, exc_info=True)
             continue
 
     if use_s3:
