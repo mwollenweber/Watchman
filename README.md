@@ -1,6 +1,10 @@
 # Watchman
 Watchman is a security tool that watches domains and fqdns. You can read more about it here: https://docs.google.com/presentation/d/10TtlZO01WfJo9raF-ShS06m5bak1NSG1/edit#slide=id.g324938c8159_1_85
 
+## Pre-Req
+1. AWS Creds
+2. S3 Buckets
+
 
 ## Setup
 1. git clone https://github.com/mwollenweber/Watchman.git

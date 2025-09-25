@@ -30,6 +30,14 @@ ICANN_USERNAME = os.getenv("ICANN_USERNAME") or warn(
 ICANN_PASSWORD = os.getenv("ICANN_PASSWORD") or warn(
     "No ICANN Password set in environment variable ICANN_PASSWORD"
 )
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID") or warn(
+    "No AWS Access Key ID set in environment variable"
+)
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY") or warn(
+    "No AWS Secret Access Key set in environment variable"
+)
+AWS_REGION_NAME = os.getenv("REGION_NAME") or "us-east-1"
+
 BATCH_SIZE = os.getenv("BATCH_SIZE") or 50000
 MIN_ZONE_TIME = os.getenv("MIN_ZONE_TIME") or 14400  # seconds
 ZONE_UPDATE_INTERVAL = os.getenv("ZONE_UPDATE_INTERVAL") or 600.0  # seconds
@@ -37,7 +45,9 @@ MIN_UPDATE_INTERVAL = os.getenv("MIN_UPDATE_INTERVAL") or 600.0
 MATCH_UPDATE_INTERVAL = os.getenv("MATCH_UPDATE_INTERVAL") or 600.0
 MAX_NEW_AGE = os.getenv("MAX_NEW_AGE") or 400  # days
 MAX_TEMP_AGE = os.getenv("MAX_TEMP_AGE") or 31  # days
-MAINTAIN_FULL_ZONEFILES = os.getenv("MAINTAIN_FULL_ZONEFILES") or False
+DOMAIN_BUCKET_NAME = os.getenv("DOMAIN_BUCKET_NAME") or "domainlists"
+NEWDOMAIN_BUCKET_NAME = os.getenv("NEWDOMAIN_BUCKET_NAME") or "newdomainlists"
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -58,7 +68,6 @@ SECRET_KEY = "django-insecure-s9n)tio7xscb%r4s_1v^rptbj*bb@ycm18(_@=%#mla#u#tut2
 
 
 ALLOWED_HOSTS = [
-    ".herokuapp.com",
     "localhost",
     "127.0.0.1",
     "watchman-dev.insomniac.tech",

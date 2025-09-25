@@ -5,7 +5,8 @@ import requests
 import json
 import cgi
 import gzip
-from Watchman.models import Domain
+import boto3
+from Watchman.models import Domain, DomainLists
 from django.conf import settings
 from django.utils import timezone
 from django.db import IntegrityError
@@ -30,24 +31,26 @@ def zonefile2list(zone_file):
 
 # Download the latest zonefile and write it out
 def update_zonefile(zone):
-    count = 0
     myicann = CZDS()
     myicann.authenticate()
     logger.info("Downloading")
     link = f"https://czds-download-api.icann.org/czds/downloads/{zone}.zone"
-    filename = f"{settings.TEMP_DIR}/{timezone.now():%Y%m%d}-{zone}.txt"
+    filename = f"{timezone.now():%Y%m%d}-{zone}.txt"
 
     zone_data = myicann.download_one_zone(link)
     zone_list = zonefile2list(zone_data)
     zone_list.sort()
 
-    # fixme -- lets put this in S3
-    outfile = open(filename, "w")
-    for line in zone_list:
-        outfile.write(f"{line}\n")
-        count += 1
-        if count % 10000 == 0:
-            logger.debug(f"{count} domains written to {filename}")
+    S3 = boto3.client(
+        "s3",
+        region_name=settings.AWS_REGION_NAME,
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+    )
+    S3.put_object(Body="\n".join(zone_list), Bucket=settings.DOMAIN_BUCKET_NAME, Key=filename)
+    DomainLists.objects.create(
+        zone=zone, bucket_name=settings.DOMAIN_BUCKET_NAME, object_name=filename
+    )
 
 
 class CZDS:
