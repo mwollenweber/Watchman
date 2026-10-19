@@ -2,7 +2,36 @@
 
 usage() {
     echo "Usage: $0 [--shutdown] [config-file]"
-    echo "  --shutdown   Shut down the system when the run finishes (must be run as root)"
+    echo "  --shutdown   Shut down the system when the run finishes (requires permission to shut down)"
+}
+
+# Sets SHUTDOWN_CMD to a command this user is allowed to run without a password
+# prompt, or returns 1 if the user can't shut down the system.
+find_shutdown_cmd() {
+    local bin
+    bin=$(command -v shutdown || echo /sbin/shutdown)
+
+    if [ "$(id -u)" -eq 0 ]; then
+        SHUTDOWN_CMD=("$bin" -h now)
+        return 0
+    fi
+
+    # Passwordless sudo rule for shutdown. -k ignores cached credentials, which
+    # may have expired by the time the run finishes.
+    if sudo -k -n -l "$bin" -h now >/dev/null 2>&1; then
+        SHUTDOWN_CMD=(sudo -n "$bin" -h now)
+        return 0
+    fi
+
+    # systemd-logind/polkit allows this user to power off without authentication
+    if command -v busctl >/dev/null 2>&1 &&
+        busctl call org.freedesktop.login1 /org/freedesktop/login1 \
+            org.freedesktop.login1.Manager CanPowerOff 2>/dev/null | grep -q '"yes"'; then
+        SHUTDOWN_CMD=(systemctl poweroff)
+        return 0
+    fi
+
+    return 1
 }
 
 SHUTDOWN=0
@@ -16,8 +45,9 @@ for arg in "$@"; do
     esac
 done
 
-if [ $SHUTDOWN -eq 1 ] && [ "$(id -u)" -ne 0 ]; then
-    echo "Error: --shutdown requires root. Exiting without running."
+if [ $SHUTDOWN -eq 1 ] && ! find_shutdown_cmd; then
+    echo "Error: --shutdown was given but $(id -un) doesn't have permission to shut down the system."
+    echo "Grant it with a passwordless sudoers rule for $(command -v shutdown || echo /sbin/shutdown). Exiting without running."
     exit 1
 fi
 
@@ -39,5 +69,5 @@ find ./tmp/*.txt  -mtime +15 -type f  -exec rm {} \;
 
 if [ $SHUTDOWN -eq 1 ]; then
     echo "Run complete. Shutting down."
-    shutdown -h now
+    "${SHUTDOWN_CMD[@]}"
 fi
