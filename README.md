@@ -34,7 +34,15 @@ http://localhost:8000/admin/Watchman/alertconfig/
 
 
 ## Run a daily zone update + match + alerts
-1. ./daily-run.sh 
+1. ./run-daily.sh [config-file] [--shutdown]
+
+`--shutdown` powers the system off when the run finishes. The user running it needs permission to shut down without a password prompt (root, or a passwordless sudo rule for `shutdown`).
+
+### Run on every boot
+On systemd hosts (e.g. Amazon Linux), install a service that runs `run-daily.sh` each time the system starts:
+- sudo ./install-startup.sh
+
+Add `--shutdown` to power off after each run, which pairs with a scheduled instance start for a once-a-day job; this also adds the sudoers rule the shutdown needs. Use `--config FILE` for a config other than `config.rc`, `--dry-run` to preview the files it writes, and `--uninstall` to remove it. Logs: `journalctl -u watchman-daily`.
 
 
 ## Other Commands
