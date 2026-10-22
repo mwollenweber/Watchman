@@ -47,6 +47,7 @@ MAX_NEW_AGE = os.getenv("MAX_NEW_AGE") or 400  # days
 MAX_TEMP_AGE = os.getenv("MAX_TEMP_AGE") or 31  # days
 DOMAIN_BUCKET_NAME = os.getenv("DOMAIN_BUCKET_NAME") or "domainlists"
 NEWDOMAIN_BUCKET_NAME = os.getenv("NEWDOMAIN_BUCKET_NAME") or "newdomainlists"
+MIN_DOMAIN_LIST_LENGTH = os.getenv("MIN_DOMAIN_LIST_LENGTH") or 10
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -77,7 +78,7 @@ ALLOWED_HOSTS = [
 INSTALLED_APPS = [
     "Watchman",
     "accounts",
-    "bootstrap5",
+    "django_bootstrap5",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -163,7 +164,10 @@ USE_TZ = True
 
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
 STATIC_HOST = os.environ.get("DJANGO_STATIC_HOST", "")
 STATIC_URL = STATIC_HOST + "/static/"
 
