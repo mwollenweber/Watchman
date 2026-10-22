@@ -42,7 +42,22 @@ http://localhost:8000/admin/Watchman/alertconfig/
 On systemd hosts (e.g. Amazon Linux), install a service that runs `run-daily.sh` each time the system starts:
 - sudo ./install-startup.sh
 
-Add `--shutdown` to power off after each run, which pairs with a scheduled instance start for a once-a-day job; this also adds the sudoers rule the shutdown needs. Use `--config FILE` for a config other than `config.rc`, `--dry-run` to preview the files it writes, and `--uninstall` to remove it. Logs: `journalctl -u watchman-daily`.
+Use `--config FILE` for a config other than `config.rc`, `--dry-run` to preview the files it writes, and `--uninstall` to remove it. Logs: `journalctl -u watchman-daily`.
+
+### Shut down after the daily run
+To power the system off once each boot's run finishes (pairs with a scheduled instance start for a once-a-day job):
+- sudo ./install-startup.sh --shutdown
+
+This adds `--shutdown` to the service and a sudoers rule letting your user run only `shutdown -h now` without a password. The rule is checked with `visudo` before it's installed.
+
+With a config other than `config.rc`:
+- sudo ./install-startup.sh --shutdown --config prod.rc
+
+Preview what it would install without changing anything:
+- sudo ./install-startup.sh --shutdown --dry-run
+
+To keep the system up for maintenance, stop the service after boot, before the run finishes:
+- sudo systemctl stop watchman-daily
 
 
 ## Other Commands
