@@ -164,6 +164,8 @@ For a once-a-day job on a cloud instance, schedule the instance to start each da
 sudo ./install-startup.sh --shutdown --config prod.rc
 ```
 
+[docs/production-aws.md](docs/production-aws.md) documents the production setup: an EC2 instance that EventBridge Scheduler starts every morning and that stops itself after the run.
+
 Logs:
 
 ```bash
