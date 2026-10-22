@@ -57,7 +57,7 @@ if [ -z "$CONFIG" ]
     source config.rc
   else
     echo "Sourcing $CONFIG"
-    source $CONFIG
+    source "$CONFIG"
 fi
 
 source ./env/bin/activate
