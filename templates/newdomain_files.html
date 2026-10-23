@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<br><br>
+        <div class="container">
+            <h1>New Domain Files</h1>
+            <form method="GET" class="row g-2 align-items-center my-3">
+                <div class="col-auto">
+                    <input type="date" name="date" class="form-control" value="{{ day|date:'Y-m-d' }}">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Show</button>
+                    <a href="?" class="btn btn-outline-secondary">Latest</a>
+                </div>
+            </form>
+
+            {% if files %}
+            <p class="text-body-secondary">
+                {{ files|length }} file{{ files|length|pluralize }} from {{ day|date:"Y-m-d" }}, {{ total_size|filesizeformat }} total
+            </p>
+            <table class="table table-striped table-sm">
+                <thead>
+                    <tr>
+                        <th>Zone</th>
+                        <th>File</th>
+                        <th class="text-end">Size</th>
+                        <th>Uploaded</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for f in files %}
+                    <tr>
+                        <td>{{ f.zone }}</td>
+                        <td><a href="{% url 'newdomain_file' f.key %}">{{ f.key }}</a></td>
+                        <td class="text-end">{{ f.size|filesizeformat }}</td>
+                        <td>{{ f.last_modified|date:"Y-m-d H:i" }} UTC</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% elif day %}
+            <p>No new-domain files for {{ day|date:"Y-m-d" }}.</p>
+            {% else %}
+            <p>No new-domain files in the last two weeks.</p>
+            {% endif %}
+        </div>
+
+{% endblock content %}

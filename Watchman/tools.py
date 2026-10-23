@@ -461,3 +461,58 @@ def screenshot_url(url, sleep_time=1):
         driver.get(url)
         sleep(sleep_time)
         return driver.get_screenshot_as_png()
+
+
+# New-domain lists are written by load_diff as YYYYMMDD-<zone>.txt
+NEWDOMAIN_FILE_RE = re.compile(r"^\d{8}-[A-Za-z0-9.-]+\.txt$")
+
+
+def get_s3_client():
+    return boto3.client(
+        "s3",
+        region_name=AWS_REGION_NAME,
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    )
+
+
+def list_newdomain_files(day):
+    # Return the new-domain list objects written on day (a date)
+    S3 = get_s3_client()
+    paginator = S3.get_paginator("list_objects_v2")
+    files = []
+    for page in paginator.paginate(
+        Bucket=NEWDOMAIN_BUCKET_NAME, Prefix=f"{day:%Y%m%d}-"
+    ):
+        for obj in page.get("Contents", []):
+            if not NEWDOMAIN_FILE_RE.match(obj["Key"]):
+                continue
+            files.append(
+                {
+                    "key": obj["Key"],
+                    "zone": obj["Key"][9:-4],
+                    "size": obj["Size"],
+                    "last_modified": obj["LastModified"],
+                }
+            )
+    return sorted(files, key=lambda f: f["zone"])
+
+
+def latest_newdomain_files(max_days=14):
+    # Walk back from today until a day with new-domain lists is found
+    today = timezone.now().date()
+    for offset in range(max_days):
+        day = today - timedelta(days=offset)
+        files = list_newdomain_files(day)
+        if files:
+            return day, files
+    return None, []
+
+
+def newdomain_file_url(key, expires=3600):
+    S3 = get_s3_client()
+    return S3.generate_presigned_url(
+        "get_object",
+        Params={"Bucket": NEWDOMAIN_BUCKET_NAME, "Key": key},
+        ExpiresIn=expires,
+    )
