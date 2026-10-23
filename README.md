@@ -193,6 +193,8 @@ All endpoints return JSON. Most require a signed-in session.
 | `GET /api/hits/` | User | Matches for your client (all clients for superusers). `?id=N` for one match, `&enrich=True` to add VirusTotal data. |
 | `GET /api/public_hits/` | None | Reviewed, public, non-false-positive matches from the last 30 days |
 | `GET /api/newdomains/` | None | New domains from the last 30 days |
+| `GET /newdomainfiles/` | User | Page listing the latest day's new-domain list files in the `NEWDOMAIN_BUCKET_NAME` bucket, with download links. `?date=YYYY-MM-DD` for another day, `&format=json` for JSON. |
+| `GET /newdomainfiles/<file>` | User | Redirects to a one-hour presigned S3 download URL for that file |
 | `GET /api/isnod/?value=example.com` | User | Whether a domain is newly observed |
 | `GET /api/search/?search_type=new_domain&value=foo` | User | Search new domains (`new_domain`, `domain`, or `nod`) |
 | `GET /api/zonestatus/` | Superuser | Status and last update time of each enabled zone |
