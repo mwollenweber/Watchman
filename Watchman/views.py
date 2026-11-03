@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timedelta, timezone
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, Http404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth import authenticate, logout  # , login
@@ -14,6 +14,12 @@ from django.contrib.auth import login as auth_login
 from django.views.decorators.http import require_http_methods
 from Watchman.models import Domain, ZoneList, Match, ClientUser, NewDomain
 from Watchman.enrichments.vt import VT
+from Watchman.tools import (
+    NEWDOMAIN_FILE_RE,
+    list_newdomain_files,
+    latest_newdomain_files,
+    newdomain_file_url,
+)
 from Watchman.settings import BASE_URL
 
 
@@ -254,3 +260,44 @@ def view_alerts(request):
     # request.user
     # alert_id
     return JsonResponse(status=200)
+
+
+@require_http_methods(["GET"])
+@login_required()
+def newdomain_files(request):
+    # Lists the new-domain files in S3 for ?date=YYYY-MM-DD, or the latest day.
+    # Add ?format=json for JSON.
+    day = request.GET.get("date")
+    if day:
+        try:
+            day = datetime.strptime(day, "%Y-%m-%d").date()
+        except ValueError:
+            return HttpResponse("date must be YYYY-MM-DD", status=400)
+        files = list_newdomain_files(day)
+    else:
+        day, files = latest_newdomain_files()
+
+    if request.GET.get("format") == "json":
+        return JsonResponse(
+            {
+                "status": "success",
+                "date": f"{day}" if day else None,
+                "count": len(files),
+                "files": files,
+            }
+        )
+    context = {
+        "title": "New Domain Files",
+        "day": day,
+        "files": files,
+        "total_size": sum(f["size"] for f in files),
+    }
+    return render(request, "newdomain_files.html", context)
+
+
+@require_http_methods(["GET"])
+@login_required()
+def newdomain_file(request, key):
+    if not NEWDOMAIN_FILE_RE.match(key):
+        raise Http404()
+    return redirect(newdomain_file_url(key))
