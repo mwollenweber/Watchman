@@ -40,7 +40,7 @@ There are two halves:
       --attribute instanceInitiatedShutdownBehavior
   ```
 
-- With the default `install.sh` setup, Postgres and Redis run on the same instance. The database, the Django admin, and the API are only reachable while the instance is up.
+- With the default `install.sh` setup, Postgres and Redis run on the same instance. The database, the Django admin, and the API are only reachable while the instance is up. To keep the site available all day, move the database to a host that stays up (RDS, or a small database instance) and run the web service on a small instance with `install-web.sh`; see [Web-only host](../README.md#web-only-host).
 - If the EBS volumes are encrypted with a customer managed KMS key, the scheduler role also needs `kms:CreateGrant` on that key. Without it the instance goes to `pending` and then back to `stopped`. Volumes that are unencrypted or use the AWS managed `aws/ebs` key need no extra permissions. See AWS's [KMS permissions for EC2](https://repost.aws/knowledge-center/kms-iam-ec2-permission) article.
 
 ## 1. Install the boot service on the instance

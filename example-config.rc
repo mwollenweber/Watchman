@@ -12,4 +12,12 @@ export DOMAIN_BUCKET_NAME='domainlist'
 export NEWDOMAIN_BUCKET_NAME='newdomainlists'
 export AWS_ACCESS_KEY_ID=''
 export AWS_SECRET_ACCESS_KEY=''
-export REGION_NAME='us-east-1'
+export REGION_NAME='us-east-1'# Web service (install-web.sh / run-web.sh). DEBUG is off under run-web.sh unless set here.
+# DJANGO_SECRET_KEY is required with DEBUG off; install-web.sh generates one if it's missing.
+export DJANGO_SECRET_KEY=''
+# Extra hostnames the site answers for; the host in BASE_URL is always allowed.
+export ALLOWED_HOSTS=''
+export WEB_BIND='0.0.0.0:8000'
+export WEB_WORKERS=3
+# Set to true behind a load balancer or proxy that terminates TLS.
+export USE_X_FORWARDED_PROTO='false'
