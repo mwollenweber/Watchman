@@ -1,7 +1,25 @@
 import os
+import re
 from warnings import warn
 from pathlib import Path
 from logging.config import dictConfig
+from urllib.parse import urlsplit
+
+from django.core.exceptions import ImproperlyConfigured
+
+
+
+def _env_bool(name, default):
+    value = os.getenv(name)
+    if value is None or value == "":
+        return default
+    return value.strip().lower() in ("1", "true", "yes", "on")
+
+
+def _env_list(name):
+    """Space- or comma-separated list from the environment."""
+    return [item for item in re.split(r"[\s,]+", os.getenv(name) or "") if item]
+
 
 BASE_URL = os.getenv("BASE_URL") or "http://localhost:8000"
 VT_APIKEY = os.getenv("VT_APIKEY") or warn("No VT API key provided")
@@ -11,7 +29,8 @@ I_UNDERSTAND_THIS_IS_DANGEROUS = os.getenv("I_UNDERSTAND_THIS_IS_DANGEROUS") or 
 # Celery settings
 CELERY_BROKER_URL = "redis://localhost:6379/0"
 
-DEBUG = os.getenv("DEBUG") or True
+# Off in production: run-web.sh turns it off unless the config sets DEBUG explicitly.
+DEBUG = _env_bool("DEBUG", True)
 DBNAME = os.getenv("DBNAME") or warn(
     "No Database Name set in environment variable DBNAME"
 )
@@ -65,14 +84,47 @@ AUTH_USER_MODEL = "accounts.CustomUser"
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-s9n)tio7xscb%r4s_1v^rptbj*bb@ycm18(_@=%#mla#u#tut2"
+# The built-in key is only for development. With DEBUG off, DJANGO_SECRET_KEY
+# must be set (install-web.sh generates one into the config file).
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY") or ""
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = "django-insecure-s9n)tio7xscb%r4s_1v^rptbj*bb@ycm18(_@=%#mla#u#tut2"
+    else:
+        raise ImproperlyConfigured(
+            "DJANGO_SECRET_KEY must be set when DEBUG is off. Generate one with "
+            "install-web.sh or python -c 'from django.core.management.utils import "
+            "get_random_secret_key as k; print(k())'"
+        )
 
 
+# The hosts this site answers for: the defaults, ALLOWED_HOSTS from the
+# environment, and the host in BASE_URL.
+_base_url = urlsplit(BASE_URL)
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "watchman-dev.insomniac.tech",
 ]
+for _host in _env_list("ALLOWED_HOSTS") + [_base_url.hostname or ""]:
+    if _host and _host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_host)
+
+# Origins allowed to POST (sign-in, admin). BASE_URL is always trusted.
+CSRF_TRUSTED_ORIGINS = _env_list("CSRF_TRUSTED_ORIGINS")
+if _base_url.scheme and _base_url.netloc:
+    _origin = f"{_base_url.scheme}://{_base_url.netloc}"
+    if _origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(_origin)
+
+# Behind a load balancer or reverse proxy that terminates TLS, trust its
+# X-Forwarded-Proto header so Django knows the request was HTTPS.
+if _env_bool("USE_X_FORWARDED_PROTO", False):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+if not DEBUG and _base_url.scheme == "https":
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 # Application definition
 INSTALLED_APPS = [
