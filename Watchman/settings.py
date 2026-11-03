@@ -3,6 +3,15 @@ from warnings import warn
 from pathlib import Path
 from logging.config import dictConfig
 
+
+
+def _env_bool(name, default):
+    value = os.getenv(name)
+    if value is None or value == "":
+        return default
+    return value.strip().lower() in ("1", "true", "yes", "on")
+
+
 BASE_URL = os.getenv("BASE_URL") or "http://localhost:8000"
 VT_APIKEY = os.getenv("VT_APIKEY") or warn("No VT API key provided")
 ENABLE_WEB_SCREENSHOT = os.getenv("ENABLE_WEB_SCREENSHOT") or False
@@ -58,8 +67,35 @@ TEMPLATE_DIRS = [
 
 TEMP_DIR = f"{BASE_DIR}/tmp"
 
-# AUTH_USER_MODEL = 'Watchman.CustomUser'
 AUTH_USER_MODEL = "accounts.CustomUser"
+
+# Sign-in: no usernames or passwords. Users enter their email address and get
+# a one-time code every time. An unknown address becomes a new account when
+# its first code is verified, unless OPEN_REGISTRATION is off.
+LOGIN_URL = "/accounts/login/"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/accounts/login/"
+OPEN_REGISTRATION = _env_bool("OPEN_REGISTRATION", True)
+LOGIN_CODE_TTL_MINUTES = int(os.getenv("LOGIN_CODE_TTL_MINUTES") or 10)
+LOGIN_CODE_MAX_ATTEMPTS = int(os.getenv("LOGIN_CODE_MAX_ATTEMPTS") or 5)
+LOGIN_CODE_RESEND_SECONDS = int(os.getenv("LOGIN_CODE_RESEND_SECONDS") or 30)
+LOGIN_CODE_MAX_PER_HOUR = int(os.getenv("LOGIN_CODE_MAX_PER_HOUR") or 5)
+
+# Outgoing email, used to deliver login codes. Without EMAIL_HOST, codes are
+# printed to the server console instead of sent.
+EMAIL_HOST = os.getenv("EMAIL_HOST") or ""
+EMAIL_PORT = int(os.getenv("EMAIL_PORT") or 465)
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER") or ""
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD") or ""
+EMAIL_USE_SSL = _env_bool("EMAIL_USE_SSL", EMAIL_PORT == 465)
+EMAIL_USE_TLS = _env_bool("EMAIL_USE_TLS", EMAIL_PORT == 587)
+EMAIL_TIMEOUT = 20
+DEFAULT_FROM_EMAIL = os.getenv("EMAIL_FROM") or EMAIL_HOST_USER or "watchman@localhost"
+if EMAIL_HOST:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+    warn("No EMAIL_HOST set; login codes will be printed to the console instead of emailed")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/

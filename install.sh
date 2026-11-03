@@ -41,7 +41,8 @@ python manage.py makemigrations
 python manage.py migrate
 python manage.py init_zones
 python manage.py enable_zone `echo $ENABLED_ZONES`
-echo "Create a Super User"
-python manage.py createsuperuser
+echo "Create an admin user. There are no passwords: you'll sign in with a code emailed to this address."
+read -p "Admin email address: " ADMIN_EMAIL
+python manage.py createsuperuser --noinput --email "$ADMIN_EMAIL"
 echo "Install Complete"
 echo "To run a daily update launch ./run-daily.sh"
