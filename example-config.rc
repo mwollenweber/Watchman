@@ -13,3 +13,11 @@ export NEWDOMAIN_BUCKET_NAME='newdomainlists'
 export AWS_ACCESS_KEY_ID=''
 export AWS_SECRET_ACCESS_KEY=''
 export REGION_NAME='us-east-1'
+# Outgoing email for login codes. Leave EMAIL_HOST empty to print codes to the console.
+export EMAIL_HOST=''
+export EMAIL_PORT='465'
+export EMAIL_HOST_USER=''
+export EMAIL_HOST_PASSWORD=''
+export EMAIL_FROM=''
+# Set to false to stop unknown email addresses from registering themselves.
+export OPEN_REGISTRATION='true'

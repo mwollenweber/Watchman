@@ -53,7 +53,7 @@ Edit `config.rc` (see [Configuration](#configuration)), then:
 ./install.sh
 ```
 
-`install.sh` installs Postgres and Redis, creates the database and user, builds the Python virtualenv in `./env`, runs migrations, loads the zone list from CZDS, enables the zones in `ENABLED_ZONES`, and prompts you to create an admin user.
+`install.sh` installs Postgres and Redis, creates the database and user, builds the Python virtualenv in `./env`, runs migrations, loads the zone list from CZDS, enables the zones in `ENABLED_ZONES`, and asks for the email address of the first admin user.
 
 ### Upgrade
 
@@ -76,17 +76,33 @@ Pull the latest code, update dependencies (rebuilding `./env` if Python needs up
 | `DOMAIN_BUCKET_NAME` | S3 bucket for full domain lists |
 | `NEWDOMAIN_BUCKET_NAME` | S3 bucket for new-domain lists |
 | `VT_APIKEY` | VirusTotal API key (optional) |
-| `BASE_URL` | Public URL of this server, used for links in alerts |
+| `BASE_URL` | Public URL of this server, used for links in alerts and login emails |
+| `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_FROM` | SMTP server used to send login codes (port 465 uses SSL, 587 uses STARTTLS). With no `EMAIL_HOST`, codes are printed to the server console instead |
+| `OPEN_REGISTRATION` | `true` (default) lets any email address register itself by signing in. `false` sends codes only to addresses that already have an account |
 
 Less common settings, with defaults, are in [Watchman/settings.py](Watchman/settings.py): `MAX_NEW_AGE` (days a domain counts as new, 400), `MAX_TEMP_AGE` (days to keep files in `./tmp`, 31), `MIN_DOMAIN_LIST_LENGTH`, `DJANGO_LOG_LEVEL`, and others.
 
 ## Setting up monitoring
 
-Start the web server and sign in to the admin at http://localhost:8000/admin/ with the user you created during install:
+Start the web server and sign in to the admin at http://localhost:8000/admin/ with the email address you gave during install:
 
 ```bash
 ./run-server.sh [config-file]
 ```
+
+### Signing in
+
+There are no usernames or passwords. Every sign-in works the same way:
+
+1. Enter your email address at http://localhost:8000/accounts/login/.
+2. A six-digit code is emailed to you. It expires in 10 minutes and works once.
+3. Enter the code. You're signed in, and your account is created if the address is new.
+
+Without `EMAIL_HOST` configured, the code is printed in the terminal running the server. Wrong guesses, resends, and the number of codes per hour are limited; the defaults are `LOGIN_CODE_MAX_ATTEMPTS` (5), `LOGIN_CODE_RESEND_SECONDS` (30), `LOGIN_CODE_MAX_PER_HOUR` (5), and `LOGIN_CODE_TTL_MINUTES` (10), all overridable in the config file.
+
+New accounts are plain `client` users. Promote them, set their client, or deactivate them at http://localhost:8000/admin/accounts/customuser/. Admins can also add users there; the user then signs in with their emailed code like everyone else. Set `OPEN_REGISTRATION='false'` to make the admin the only way in.
+
+Upgrading from a version with usernames: the migration keeps every account, drops the username, and gives any user that had no email `<username>@placeholder.invalid`. Fix those addresses in the admin so their codes can reach them.
 
 ### 1. Add a client
 

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+<br><br>
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-5">
+                    <h1 class="text-center">Sign in</h1>
+                    <p class="text-center text-body-secondary">
+                        Enter your email address and we'll send you a one-time login code.
+                        No password needed. New here? This is also how you register.
+                    </p>
+                    <form method="POST" action="{% url 'accounts:login' %}">
+                        {% csrf_token %}
+                        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+                        {% bootstrap_form form %}
+                        <button type="submit" class="btn btn-primary w-100">Send me a code</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+{% endblock content %}

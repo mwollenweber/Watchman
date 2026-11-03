@@ -3,14 +3,8 @@ from datetime import datetime, timedelta, timezone
 from django.http import HttpResponse, JsonResponse, Http404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import permission_required
-from django.contrib.auth import authenticate, logout  # , login
 from django.shortcuts import render, redirect
 from django.template import loader
-from django.contrib.auth.forms import (
-    AuthenticationForm,
-    UserCreationForm,
-)
-from django.contrib.auth import login as auth_login
 from django.views.decorators.http import require_http_methods
 from Watchman.models import Domain, ZoneList, Match, ClientUser, NewDomain
 from Watchman.enrichments.vt import VT
@@ -39,48 +33,6 @@ def index(request):
         template = loader.get_template("base.html")
         context = {}
         return HttpResponse(template.render(context, request))
-
-
-def logout_view(request):
-    logout(request)
-    return redirect("index")
-
-
-@require_http_methods(["GET", "POST"])
-def signup(request):
-    if request.user.is_authenticated:
-        return redirect(index)
-
-    if request.method == "POST":
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            auth_login(request, user)
-            return redirect(index)
-    else:
-        form = UserCreationForm()
-    context = {
-        "form": form,
-    }
-    return render(request, "signup.html", context)
-
-
-@require_http_methods(["GET", "POST"])
-def login(request):
-    if request.user.is_authenticated:
-        return redirect(index)
-
-    if request.method == "POST":
-        form = AuthenticationForm(request, request.POST)
-        if form.is_valid():
-            auth_login(request, form.get_user())
-            return redirect(request.GET.get("next") or index)
-    else:
-        form = AuthenticationForm()
-    context = {
-        "form": form,
-    }
-    return render(request, "login.html", context)
 
 
 @permission_required("is_superuser")

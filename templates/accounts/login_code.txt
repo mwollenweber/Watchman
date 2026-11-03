@@ -1,0 +1,7 @@
+Your Watchman login code is:
+
+    {{ code }}
+
+Enter it at {{ base_url }}/accounts/verify/ to sign in. The code expires in {{ ttl }} minutes and can only be used once.
+
+If you didn't request this code, you can ignore this email. Nobody can sign in without it.
