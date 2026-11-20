@@ -22,7 +22,9 @@ ICANN CZDS ──download──▶ zone file ──▶ S3 (domain lists)
                      matches ──enrich (MX, website, VirusTotal)──▶ alerts (Slack, email)
 ```
 
-`run-daily.sh` runs the whole pipeline: `update_zone` → `run_searches` → `run_alerts` → `purge_new`. Results are managed in the Django admin.
+`run-daily.sh` runs the whole pipeline: `update_zone` → `ingest_certs` → `run_searches` → `run_alerts` → `purge_new`. Results are managed in the Django admin.
+
+It also reads newly issued TLS certificates from the Certificate Transparency logs, which catches hostnames the zone files can't show: subdomains, and domains under TLDs that aren't in CZDS. See [New certificates](#new-certificates).
 
 ## Requirements
 
@@ -108,6 +110,8 @@ Pull the latest code, update dependencies (rebuilding `./env` if Python needs up
 | `DEBUG` | `true` by default. `run-web.sh` runs with it off unless the config sets it |
 | `ALLOWED_HOSTS`, `WEB_BIND`, `WEB_WORKERS`, `USE_X_FORWARDED_PROTO` | Web service settings, see [Web-only host](#web-only-host) |
 
+| `CT_ENABLED`, `CT_MAX_ENTRIES_PER_LOG`, `CT_MAX_RUN_SECONDS`, `CT_CONTACT` | Certificate ingest, see [New certificates](#new-certificates) |
+
 Less common settings, with defaults, are in [Watchman/settings.py](Watchman/settings.py): `MAX_NEW_AGE` (days a domain counts as new, 400), `MAX_TEMP_AGE` (days to keep files in `./tmp`, 31), `MIN_DOMAIN_LIST_LENGTH`, `DJANGO_LOG_LEVEL`, and others.
 
 ## Setting up monitoring
@@ -161,6 +165,29 @@ A client can have several alert configs; each match is sent to all of them. `gma
 Alerts include the matched domain, the search method, whether it has MX records and a website, and VirusTotal registrar, creation date, and reputation when `VT_APIKEY` is set.
 
 ![Email alert](images/email_alert.png)
+
+## New certificates
+
+Every publicly trusted TLS certificate is recorded in a [Certificate Transparency](https://certificate.transparency.dev/) (CT) log. `ingest_certs` reads the newest entries from each log on [Chrome's log list](https://www.gstatic.com/ct/log_list/v3/log_list.json) and stores each hostname it hasn't seen before in the `NewCert` table, with the issuer, serial, validity dates, and the log it came from. The approach follows [ct2shell](https://github.com/raesene/ct2shell): both log APIs are read directly (RFC 6962 `get-entries` and the tiled static-ct-api), with no third-party feed in between.
+
+**A run reads a sample, not everything.** The logs take in about 2,500 entries a second between them, over 100 GB a day. Each run reads at most `CT_MAX_ENTRIES_PER_LOG` (10,000) of the newest entries from each log and stops after `CT_MAX_RUN_SECONDS` (900). A log resumes where the last run stopped, and when it has grown by more than the limit the older entries are skipped; the admin shows the skipped count for each log at http://localhost:8000/admin/Watchman/ctlog/. To cover more, raise the limits or run `ingest_certs` more often.
+
+To match cert hostnames, set a search's **Database** to `newcerts` (cert hostnames only) or `all` (new domains and cert hostnames). Searches left on `newdomains` don't run against certs unless `CT_MATCH_NEWDOMAIN_SEARCHES` is `true`. Each hostname is searched once. Matches and alerts work the same as for new domains.
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `CT_ENABLED` | `true` | Set to `false` to skip cert ingest |
+| `CT_MAX_ENTRIES_PER_LOG` | `10000` | Newest entries read from each log per run |
+| `CT_MAX_RUN_SECONDS` | `900` | Time limit for a run |
+| `CT_CONTACT` | | Email or URL sent in the User-Agent. Some logs rate-limit clients that don't identify themselves |
+| `CT_LOG_INCLUDE`, `CT_LOG_EXCLUDE` | | Regexes on the log name, to read only some logs |
+| `CT_MAX_CERT_AGE` | `30` | Days to keep hostnames before `purge_new` deletes them |
+| `CT_MATCH_NEWDOMAIN_SEARCHES` | `false` | Also run `newdomains` searches against cert hostnames |
+| `NEWCERT_BUCKET_NAME` | `NEWDOMAIN_BUCKET_NAME` | S3 bucket for each run's list of new hostnames, written as `certs/YYYYMMDD-HHMMSS.txt` |
+
+Browse the hostnames at http://localhost:8000/newcerts/.
+
+Limits: a hostname covered only by a wildcard certificate never appears by name, and log signatures aren't verified.
 
 ## Running daily
 
@@ -223,10 +250,12 @@ All endpoints return JSON. Most require a signed-in session.
 | `GET /api/hits/` | User | Matches for your client (all clients for superusers). `?id=N` for one match, `&enrich=True` to add VirusTotal data. |
 | `GET /api/public_hits/` | None | Reviewed, public, non-false-positive matches from the last 30 days |
 | `GET /api/newdomains/` | None | New domains from the last 30 days |
+| `GET /newcerts/` | User | Page of hostnames from newly logged certificates, newest first. `?q=` filters by substring, `?page=` and `?per_page=` (up to 1000) page through them, `&format=json` for JSON. |
+| `GET /api/newcerts/` | User | The same list as JSON |
 | `GET /newdomainfiles/` | User | Page listing the latest day's new-domain list files in the `NEWDOMAIN_BUCKET_NAME` bucket, with download links. `?date=YYYY-MM-DD` for another day, `&format=json` for JSON. |
 | `GET /newdomainfiles/<file>` | User | Redirects to a one-hour presigned S3 download URL for that file |
 | `GET /api/isnod/?value=example.com` | User | Whether a domain is newly observed |
-| `GET /api/search/?search_type=new_domain&value=foo` | User | Search new domains (`new_domain`, `domain`, or `nod`) |
+| `GET /api/search/?search_type=new_domain&value=foo` | User | Search new domains (`new_domain`, `domain`, or `nod`) or cert hostnames (`new_cert`) |
 | `GET /api/zonestatus/` | Superuser | Status and last update time of each enabled zone |
 
 ![Hits API](images/hit.png)
@@ -238,11 +267,12 @@ Run these from the virtualenv (`source config.rc && source env/bin/activate`):
 | Command | Description |
 | --- | --- |
 | `python manage.py update_zone com net ...` | Download, diff, and load new domains for the given zones |
-| `python manage.py run_searches` | Run active searches against new domains |
+| `python manage.py ingest_certs` | Read newly logged certificates from the CT logs. `--max-entries N`, `--run-for SECONDS`, `--logs REGEX`, `--no-upload` |
+| `python manage.py run_searches` | Run active searches against new domains and new cert hostnames |
 | `python manage.py run_alerts` | Send alerts for matches that haven't alerted yet |
 | `python manage.py init_zones` | Load the list of zones available from CZDS |
 | `python manage.py enable_zone ZONE ...` / `disable_zone ZONE` | Turn zones on or off |
 | `python manage.py firstload_zonefile ZONE` | Load every domain in a zone into the `Domain` table (not part of the daily run) |
 | `python manage.py diff_zone ZONE` | Diff the two most recent downloads of a zone |
-| `python manage.py expire_new` / `purge_new` | Mark or delete new domains older than `MAX_NEW_AGE` |
+| `python manage.py expire_new` / `purge_new` | Mark or delete new domains older than `MAX_NEW_AGE`. `purge_new` also deletes cert hostnames older than `CT_MAX_CERT_AGE` |
 | `python manage.py clean_tmp` | Delete temp files older than `MAX_TEMP_AGE` |

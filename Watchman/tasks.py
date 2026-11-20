@@ -13,6 +13,7 @@ from Watchman.tools import (
     clean_temp,
     run_alerts,
 )
+from Watchman.ct import ingest_certs
 from .celery import app
 
 logger = get_task_logger(__name__)
@@ -133,3 +134,9 @@ def update_zones():
 def run_alerts_task():
     logger.info("Running Alerts")
     run_alerts()
+
+
+@app.task(name="ingest_certs")
+def ingest_certs_task():
+    if settings.CT_ENABLED:
+        ingest_certs()

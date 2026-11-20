@@ -68,6 +68,29 @@ DOMAIN_BUCKET_NAME = os.getenv("DOMAIN_BUCKET_NAME") or "domainlists"
 NEWDOMAIN_BUCKET_NAME = os.getenv("NEWDOMAIN_BUCKET_NAME") or "newdomainlists"
 MIN_DOMAIN_LIST_LENGTH = os.getenv("MIN_DOMAIN_LIST_LENGTH") or 10
 
+# Certificate Transparency ingest (ingest_certs)
+CT_ENABLED = (os.getenv("CT_ENABLED") or "true").lower() in ("1", "true", "yes")
+CT_LOG_LIST_URL = (
+    os.getenv("CT_LOG_LIST_URL")
+    or "https://www.gstatic.com/ct/log_list/v3/log_list.json"
+)
+# Newest entries read from each log per run; anything older is skipped
+CT_MAX_ENTRIES_PER_LOG = int(os.getenv("CT_MAX_ENTRIES_PER_LOG") or 10000)
+CT_MAX_RUN_SECONDS = int(os.getenv("CT_MAX_RUN_SECONDS") or 900)
+CT_CONCURRENCY = int(os.getenv("CT_CONCURRENCY") or 16)
+# Regexes on the log name, e.g. CT_LOG_INCLUDE="Let's Encrypt|Google"
+CT_LOG_INCLUDE = os.getenv("CT_LOG_INCLUDE") or ""
+CT_LOG_EXCLUDE = os.getenv("CT_LOG_EXCLUDE") or ""
+# Email or URL added to the User-Agent. Some logs rate-limit anonymous clients.
+CT_CONTACT = os.getenv("CT_CONTACT") or ""
+CT_MAX_CERT_AGE = int(os.getenv("CT_MAX_CERT_AGE") or 30)  # days
+CT_INGEST_INTERVAL = float(os.getenv("CT_INGEST_INTERVAL") or 3600.0)  # seconds
+# Also run searches whose database is "newdomains" against new cert names
+CT_MATCH_NEWDOMAIN_SEARCHES = (
+    os.getenv("CT_MATCH_NEWDOMAIN_SEARCHES") or "false"
+).lower() in ("1", "true", "yes")
+NEWCERT_BUCKET_NAME = os.getenv("NEWCERT_BUCKET_NAME") or NEWDOMAIN_BUCKET_NAME
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent

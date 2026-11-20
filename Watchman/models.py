@@ -289,3 +289,61 @@ class NewDomainLists(models.Model):
     bucket_name = models.CharField(max_length=255, db_index=True)
     object_name = models.CharField(max_length=255, db_index=True)
     created = models.DateTimeField(auto_now_add=True, db_index=True)
+
+
+class CTLog(models.Model):
+    # A Certificate Transparency log from Chrome's log list, and how far
+    # ingest_certs has read into it.
+    log_id = models.CharField(max_length=64, primary_key=True)
+    name = models.CharField(max_length=255, db_index=True)
+    operator = models.CharField(max_length=255, blank=True, default="")
+    url = models.CharField(max_length=255)
+    is_tiled = models.BooleanField(default=False)
+    # Set false in the admin to stop reading a log
+    enabled = models.BooleanField(default=True, db_index=True)
+    # False once the log drops off the list of logs accepting new certs
+    is_current = models.BooleanField(default=True, db_index=True)
+    # Index of the next entry to read; null until the log is first read
+    position = models.BigIntegerField(blank=True, null=True)
+    tree_size = models.BigIntegerField(default=0)
+    # Entries passed over because the log grew by more than one run reads
+    entries_skipped = models.BigIntegerField(default=0)
+    status = models.CharField(max_length=32, default="new", db_index=True)
+    last_updated = models.DateTimeField(blank=True, null=True)
+    last_error = models.DateTimeField(blank=True, null=True)
+    error_message = models.TextField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = "CT log"
+
+    def __str__(self):
+        return self.name
+
+
+class NewCert(models.Model):
+    # A hostname from a newly logged certificate. One row per hostname, with
+    # the details of the first certificate it was seen on.
+    name = models.CharField(max_length=255, primary_key=True)
+    tld = models.CharField(max_length=63, db_index=True)
+    is_wildcard = models.BooleanField(default=False)
+    issuer = models.CharField(max_length=255, blank=True, default="")
+    serial = models.CharField(max_length=64, blank=True, default="")
+    not_before = models.DateTimeField(blank=True, null=True)
+    not_after = models.DateTimeField(blank=True, null=True)
+    is_precert = models.BooleanField(default=False)
+    log = models.CharField(max_length=255, blank=True, default="")
+    log_index = models.BigIntegerField(blank=True, null=True)
+    logged_at = models.DateTimeField(blank=True, null=True)
+    created = models.DateTimeField(auto_now_add=True, blank=True, db_index=True)
+    is_processed = models.BooleanField(default=False, blank=True, db_index=True)
+    is_expired = models.BooleanField(default=False, db_index=True)
+    is_ignored = models.BooleanField(default=False, db_index=True)
+
+    class Meta:
+        verbose_name = "New cert"
+
+    def to_dict(self):
+        return model_to_dict(self)
+
+    def __str__(self):
+        return self.name
