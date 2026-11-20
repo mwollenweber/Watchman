@@ -27,6 +27,10 @@ app.conf.beat_schedule = {
         # "schedule": settings.MATCH_UPDATE_INTERVAL,
         "schedule": 120,
     },
+    "ingest_certs": {
+        "task": "ingest_certs",
+        "schedule": settings.CT_INGEST_INTERVAL,
+    },
     "expire_new": {
         "task": "expire_new",
         "schedule": 3600,

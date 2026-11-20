@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<br><br>
+        <div class="container">
+            <h1>New Certificates</h1>
+            <form method="GET" class="row g-2 align-items-center my-3">
+                <div class="col-auto">
+                    <input type="search" name="q" class="form-control" placeholder="Hostname contains" value="{{ q }}">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                    <a href="?" class="btn btn-outline-secondary">Clear</a>
+                </div>
+            </form>
+
+            {% if page.object_list %}
+            <p class="text-body-secondary">
+                {{ page.paginator.count }} hostname{{ page.paginator.count|pluralize }}{% if q %} containing "{{ q }}"{% endif %}, read from {{ logs }} Certificate Transparency log{{ logs|pluralize }}
+            </p>
+            <table class="table table-striped table-sm">
+                <thead>
+                    <tr>
+                        <th>Hostname</th>
+                        <th>Issuer</th>
+                        <th>Valid from</th>
+                        <th>Log</th>
+                        <th>First seen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for c in page %}
+                    <tr>
+                        <td>{% if c.is_wildcard %}*.{% endif %}{{ c.name }}</td>
+                        <td>{{ c.issuer }}</td>
+                        <td>{{ c.not_before|date:"Y-m-d" }}</td>
+                        <td>{{ c.log }}</td>
+                        <td>{{ c.created|date:"Y-m-d H:i" }} UTC</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <nav class="d-flex align-items-center gap-3">
+                {% if page.has_previous %}
+                <a class="btn btn-outline-secondary btn-sm" href="?q={{ q|urlencode }}&page={{ page.previous_page_number }}">Newer</a>
+                {% endif %}
+                <span class="text-body-secondary">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+                {% if page.has_next %}
+                <a class="btn btn-outline-secondary btn-sm" href="?q={{ q|urlencode }}&page={{ page.next_page_number }}">Older</a>
+                {% endif %}
+            </nav>
+            {% elif q %}
+            <p>No new certificates with a hostname containing "{{ q }}".</p>
+            {% else %}
+            <p>No new certificates yet. Run <code>python manage.py ingest_certs</code>.</p>
+            {% endif %}
+        </div>
+
+{% endblock content %}

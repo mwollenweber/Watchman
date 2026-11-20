@@ -12,7 +12,8 @@ from django.contrib.auth.forms import (
 )
 from django.contrib.auth import login as auth_login
 from django.views.decorators.http import require_http_methods
-from Watchman.models import Domain, ZoneList, Match, ClientUser, NewDomain
+from django.core.paginator import Paginator
+from Watchman.models import Domain, ZoneList, Match, ClientUser, NewDomain, NewCert, CTLog
 from Watchman.enrichments.vt import VT
 from Watchman.tools import (
     NEWDOMAIN_FILE_RE,
@@ -151,6 +152,10 @@ def search(request):
     # fixme we're not doing a domain table
     elif search_type == "domain":
         data = Domain.objects.filter(domain__icontains=value).all()
+        for d in data:
+            results.append(d.to_dict())
+    elif search_type == "new_cert":
+        data = NewCert.objects.filter(name__icontains=value)[:1000]
         for d in data:
             results.append(d.to_dict())
     elif search_type == "nod":
@@ -301,3 +306,54 @@ def newdomain_file(request, key):
     if not NEWDOMAIN_FILE_RE.match(key):
         raise Http404()
     return redirect(newdomain_file_url(key))
+
+
+@require_http_methods(["GET"])
+@login_required()
+def new_certs(request, as_json=False):
+    # Hostnames from newly logged certificates, newest first. ?q= filters by
+    # substring, ?page= and ?per_page= page through them, ?format=json for JSON.
+    q = request.GET.get("q", "").strip().lower()
+    certs = NewCert.objects.filter(is_ignored=False).order_by("-created", "name")
+    if q:
+        certs = certs.filter(name__icontains=q)
+    try:
+        per_page = min(max(int(request.GET.get("per_page", 100)), 1), 1000)
+    except ValueError:
+        per_page = 100
+    page = Paginator(certs, per_page).get_page(request.GET.get("page"))
+
+    if as_json or request.GET.get("format") == "json":
+        results = [
+            {
+                "name": c.name,
+                "is_wildcard": c.is_wildcard,
+                "issuer": c.issuer,
+                "serial": c.serial,
+                "not_before": c.not_before,
+                "not_after": c.not_after,
+                "is_precert": c.is_precert,
+                "log": c.log,
+                "log_index": c.log_index,
+                "logged_at": c.logged_at,
+                "created": c.created,
+            }
+            for c in page
+        ]
+        return JsonResponse(
+            {
+                "status": "success",
+                "count": len(results),
+                "total": page.paginator.count,
+                "page": page.number,
+                "pages": page.paginator.num_pages,
+                "results": results,
+            }
+        )
+    context = {
+        "title": "New Certificates",
+        "q": q,
+        "page": page,
+        "logs": CTLog.objects.filter(enabled=True, is_current=True).count(),
+    }
+    return render(request, "newcerts.html", context)

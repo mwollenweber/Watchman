@@ -13,6 +13,8 @@ urlpatterns = [
     path("api/search/", views.search),
     path("api/isnod/", views.is_nod),
     path("api/newdomains/", views.new_domains),
+    path("api/newcerts/", views.new_certs, {"as_json": True}),
+    path("newcerts/", views.new_certs, name="new_certs"),
     path("newdomainfiles/", views.newdomain_files),
     path("newdomainfiles/<str:key>", views.newdomain_file, name="newdomain_file"),
     path("admin/", admin.site.urls),

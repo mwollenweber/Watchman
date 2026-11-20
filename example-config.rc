@@ -21,3 +21,10 @@ export WEB_BIND='0.0.0.0:8000'
 export WEB_WORKERS=3
 # Set to true behind a load balancer or proxy that terminates TLS.
 export USE_X_FORWARDED_PROTO='false'
+# Certificate Transparency ingest. Set CT_ENABLED to false to skip it.
+export CT_ENABLED='true'
+# Newest entries read from each CT log per run, and the time limit for a run
+export CT_MAX_ENTRIES_PER_LOG='10000'
+export CT_MAX_RUN_SECONDS='900'
+# Email or URL sent in the User-Agent; some logs rate-limit anonymous clients
+export CT_CONTACT=''

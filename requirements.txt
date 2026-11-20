@@ -11,11 +11,13 @@ boto3==1.43.114
 botocore==1.43.114
 celery==5.6.3
 certifi==2026.10.18
+cffi==2.1.1
 charset-normalizer==3.5.2
 click==8.5.0
 click-didyoumean==0.3.1
 click-plugins==1.1.1.2
 click-repl==0.4.1
+cryptography==50.0.2
 Django==5.2.18
 django-bootstrap5==26.4
 django-cors-headers==4.9.0
@@ -36,6 +38,7 @@ pip-upgrader==2.4.13
 prompt_toolkit==3.0.53
 propcache==0.5.4
 psycopg2-binary==2.9.13
+pycparser==3.12
 PySocks==1.7.1
 python-dateutil==2.9.0.post0
 questionary==2.1.1

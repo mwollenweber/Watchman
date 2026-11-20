@@ -15,7 +15,14 @@ from Levenshtein import distance
 from django.utils import timezone
 from datetime import timedelta, datetime
 from selenium import webdriver
-from Watchman.models import NewDomain, Match, Search, AlertConfig, DomainLists
+from Watchman.models import (
+    NewDomain,
+    NewCert,
+    Match,
+    Search,
+    AlertConfig,
+    DomainLists,
+)
 from Watchman.alerts.slackAlert import sendSlackMessage, sendSlackWebhook
 from Watchman.alerts.email import send_email
 from Watchman.settings import (
@@ -130,6 +137,9 @@ def expire_new():
 def purge_new():
     threshold = timezone.now() - timedelta(days=settings.MAX_NEW_AGE)
     NewDomain.objects.filter(created__lt=threshold).delete()
+    # Cert names arrive in far greater numbers, so they're kept for less time
+    threshold = timezone.now() - timedelta(days=settings.CT_MAX_CERT_AGE)
+    NewCert.objects.filter(created__lt=threshold).delete()
 
 
 def diff_zone(zone):
@@ -181,6 +191,28 @@ def run_search(method, criteria, target_list, tolerance=None):
     return match.run(target_list)
 
 
+def save_hits(search, hits):
+    for h in hits:
+        try:
+            db_hit, created = Match.objects.get_or_create(
+                domain=h,
+                client=search.client,
+                search=search,
+                defaults={
+                    "last_modified": timezone.now(),
+                },
+            )
+            if created:
+                # Do these enrichments after the record is created so that an error doesn't drop the record
+                db_hit.has_mx = has_mx(h)
+                db_hit.has_website = has_website(h)
+                db_hit.save()
+
+        except Exception as e:
+            # logger.error(e)
+            error = f"{e}"
+
+
 def run_searches():
     logging.info("Running Searches")
     # run the new domain as target list first
@@ -188,7 +220,9 @@ def run_searches():
     target_list = NewDomain.objects.filter(is_expired=False).values_list(
         "domain", flat=True
     )
-    search_list = Search.objects.filter(is_active=True, database="newdomains")
+    search_list = Search.objects.filter(
+        is_active=True, database__in=["newdomains", "all"]
+    )
     for s in search_list:
         if s.last_completed < timezone.now() - timedelta(seconds=s.update_interval):
             if s.last_updated < timezone.now() - timedelta(
@@ -200,25 +234,48 @@ def run_searches():
                     run_search(s.method, s.criteria, target_list, tolerance=s.tolerance)
                     or []
                 )
-                for h in hits:
-                    try:
-                        db_hit, created = Match.objects.get_or_create(
-                            domain=h,
-                            client=s.client,
-                            search=s,
-                            defaults={
-                                "last_modified": timezone.now(),
-                            },
-                        )
-                        if created:
-                            # Do these enrichments after the record is created so that an error doesn't drop the record
-                            db_hit.has_mx = has_mx(h)
-                            db_hit.has_website = has_website(h)
-                            db_hit.save()
+                save_hits(s, hits)
 
-                    except Exception as e:
-                        # logger.error(e)
-                        error = f"{e}"
+    run_cert_searches()
+
+
+def run_cert_searches(chunk_size=50000):
+    # Match hostnames from newly logged certificates. A search opts in with
+    # database "newcerts" (cert names only) or "all" (domains and cert names).
+    # Each name is searched once, then marked processed.
+    databases = ["newcerts", "all"]
+    if settings.CT_MATCH_NEWDOMAIN_SEARCHES:
+        databases.append("newdomains")
+    search_list = list(Search.objects.filter(is_active=True, database__in=databases))
+    if not search_list:
+        # Leave names unprocessed so the first search added sees the backlog
+        return 0
+
+    logger.info(f"Running {len(search_list)} newcert searches")
+    pending = NewCert.objects.filter(
+        is_processed=False, is_ignored=False, created__lte=timezone.now()
+    )
+    names = pending.values_list("name", flat=True).order_by("name")
+    count = 0
+    chunk = []
+
+    def search_chunk():
+        for s in search_list:
+            hits = run_search(s.method, s.criteria, chunk, tolerance=s.tolerance)
+            save_hits(s, hits or [])
+        NewCert.objects.filter(name__in=chunk).update(is_processed=True)
+
+    for name in names.iterator(chunk_size=1000):
+        chunk.append(name)
+        if len(chunk) >= chunk_size:
+            search_chunk()
+            count += len(chunk)
+            chunk = []
+    if chunk:
+        search_chunk()
+        count += len(chunk)
+    logger.info(f"Searched {count} new cert names")
+    return count
 
 
 def load_diff(domain_list, zone):
